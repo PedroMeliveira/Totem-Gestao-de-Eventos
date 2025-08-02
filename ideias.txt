@@ -3,5 +3,4 @@ painel de cliente e de admin:
 
 painel de cliente:
     - buscar eventos por filtros -> data, faixa de preço, localização
-    - meus ingressos -> área que mostra todos os ingressos comprados do cliente
-    - esquece ideia de mostrar o assento da pessoa, na hora
+    - comprar apenas ingressos específicos (vip etc), sem assentos específicos
