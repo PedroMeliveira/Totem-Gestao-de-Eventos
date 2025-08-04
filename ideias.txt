@@ -4,3 +4,11 @@ painel de cliente e de admin:
 painel de cliente:
     - buscar eventos por filtros -> data, faixa de preço, localização
     - comprar apenas ingressos específicos (vip etc), sem assentos específicos
+
+    (meus ingressos) - fazer cada ingresso ser um item que pode ser expandido com o dialog, se ele aperta ele é expandido
+    (área de alimento) - botar 3 tabs, cardápio, carrinho, retirar
+                    ^- no cardápio, botar os alimentos, cada alimento ser um popover, que quando clicado, vai aparecer um botão para adicionar no carrinho
+                    ^- no retirar, cada vez que ele comprar algo, gerar um código que a pessoa pode retirar, na tela, ter um popover para cada compra
+    (central de eventos) - botar 2 tabs, eventos, carrinho
+                    ^- nos eventos, colocar uma versão resumida do evento num botão e quando clica, abre um dialog que mostra mais informações e coloca ingressos num carrinho
+                    ^- no carrinho mostra ingressos que ele está comprando, depois que comprar vai para os meus ingressos

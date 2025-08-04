@@ -4,7 +4,7 @@ if 'pagina_atual' not in st.session_state:
     st.session_state.pagina_atual = "login"
 
 if 'cliente_pagina_selecionada' not in st.session_state:
-    st.session_state.cliente_pagina_selecionada = "Selecionar Evento"
+    st.session_state.cliente_pagina_selecionada = "Meus Ingressos"
 
 if 'admin_pagina_selecionada' not in st.session_state:
     st.session_state.admin_pagina_selecionada = "Selecionar Evento Admin"
@@ -44,15 +44,60 @@ def checarLogin(usuario, senha):
         return "admin"
     return None
 
-def pagina_selecionar_evento():
-    st.header("Selecione um Evento")
-    st.button("Ir para Central de Eventos (Exemplo)", on_click=mudar_pagina_cliente, args=("Central de Eventos",))
-
 def pagina_meus_ingressos():
     st.header("Meus Ingressos")
 
 def pagina_area_alimentos():
     st.header("Área de Alimentos")
+    tab1, tab2, tab3 = st.tabs(["Cardápio", "Carrinho", "Retirar"])
+    
+    with tab1:
+        st.subheader("Cardápio")
+        alimentos = ["Refrigerante", "Pipoca", "Cerveja"]
+        for alimento in alimentos:
+            with st.expander(alimento):
+                st.title(f"Descrição do {alimento}")
+                st.write("Preço: R$ 10.00")
+                col3, col4 = st.columns(2)
+                with col4:
+                    st.button(f"Adicionar {alimento} ao carrinho")
+    
+    with tab2:
+        st.subheader("Carrinho")
+        itens = [
+            {"Alimento": "Refrigerante", "Quantidade": 2},
+            {"Alimento": "Pipoca", "Quantidade": 1}
+        ]
+
+        st.write("Itens no carrinho:")
+
+        for item in itens:
+            col1, col2, col3 = st.columns([3, 1, 1])
+            
+            with col1:
+                st.markdown(f"""
+                <div style="background-color:#262730; padding:15px; border-radius:10px;">
+                    <strong>{item['Alimento']}</strong><br>
+                    Quantidade: {item['Quantidade']}
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                if st.button("aumentar", key=f"add_{item}"):
+                    # aumentar quantidade
+                    pass
+            
+            with col3:
+                if st.button("diminuir", key=f"remove_{item}"):
+                    # diminuir quantidade
+                    pass
+
+        st.write("---")
+        st.button("Finalizar Compra")
+            
+    with tab3:
+        st.subheader("Retirar")
+        st.write("Compra 99999")
 
 def pagina_central_eventos():
     st.header("Central de Eventos")
@@ -161,8 +206,11 @@ def renderizar_login():
         )
 
     with col2:
-        st.markdown("###### Não possui conta?")
-        st.button("Cadastrar", use_container_width=True, on_click=mudar_pagina, args=("cadastrar",))
+        col3, col4 = st.columns(2)
+        with col3:
+            st.markdown("###### Não possui conta?")
+        with col4:
+            st.button("Cadastrar", use_container_width=True, on_click=mudar_pagina, args=("cadastrar",))
 
 def renderizar_cadastro():
     st.title("Cadastrar Novo Usuário")
@@ -170,21 +218,23 @@ def renderizar_cadastro():
 
 def renderizar_cliente():
     st.sidebar.title("Menu do Cliente")
-    opcoes_cliente = ["Selecionar Evento", "Meus Ingressos", "Área de Alimentos", "Central de Eventos"]
+    st.sidebar.write("---")
+
+    opcoes_cliente = ["Meus Ingressos", "Área de Alimentos", "Central de Eventos"]
     
     selected_option = st.sidebar.radio(
         "Navegar", opcoes_cliente, index=opcoes_cliente.index(st.session_state.cliente_pagina_selecionada)
     )
     if selected_option != st.session_state.cliente_pagina_selecionada:
         st.session_state.cliente_pagina_selecionada = selected_option
-        st.experimental_rerun()
+        st.rerun()
 
     st.sidebar.markdown("---")
+    st.sidebar.title("Informações Pessoais")
+    st.sidebar.write("Nome: Cliente Exemplo")
     st.sidebar.button("Sair", on_click=mudar_pagina, args=("login",))
 
-    if st.session_state.cliente_pagina_selecionada == "Selecionar Evento":
-        pagina_selecionar_evento()
-    elif st.session_state.cliente_pagina_selecionada == "Meus Ingressos":
+    if st.session_state.cliente_pagina_selecionada == "Meus Ingressos":
         pagina_meus_ingressos()
     elif st.session_state.cliente_pagina_selecionada == "Área de Alimentos":
         pagina_area_alimentos()
