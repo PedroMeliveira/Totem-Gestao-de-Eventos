@@ -1,151 +1,92 @@
 import streamlit as st
 
-if 'pagina_atual' not in st.session_state:
-    st.session_state.pagina_atual = "login"
-
-if 'cliente_pagina_selecionada' not in st.session_state:
-    st.session_state.cliente_pagina_selecionada = "Meus Ingressos"
-
-if 'admin_pagina_selecionada' not in st.session_state:
-    st.session_state.admin_pagina_selecionada = "Selecionar Evento Admin"
-
-if 'evento_admin_selecionado' not in st.session_state:
-    st.session_state.evento_admin_selecionado = None
-
-
-def mudar_pagina(nova_pagina):
-    st.session_state.pagina_atual = nova_pagina
-
-def mudar_pagina_cliente(nova_pagina):
-    st.session_state.cliente_pagina_selecionada = nova_pagina
-
-def mudar_pagina_admin(nova_pagina):
-    st.session_state.admin_pagina_selecionada = nova_pagina
-
-def handle_login(usuario, senha):
-    resultado = checarLogin(usuario, senha)
-    if resultado == "cliente":
-        st.session_state.pagina_atual = "cliente"
-    elif resultado == "admin":
-        st.session_state.pagina_atual = "admin"
-    else:
-        st.error("Usuário ou senha incorretos.")
-
-def handle_evento_admin_selecionado():
-    if st.session_state.evento_admin_selecionado_box != "Selecione...":
-        st.session_state.evento_admin_selecionado = st.session_state.evento_admin_selecionado_box
-        st.session_state.admin_pagina_selecionada = "Estatísticas do Evento"
-
-
-def checarLogin(usuario, senha):
-    if usuario == "cliente" and senha == "123":
-        return "cliente"
-    elif usuario == "admin" and senha == "admin":
-        return "admin"
-    return None
-
 def pagina_meus_ingressos():
     st.header("Meus Ingressos")
-
     st.write("---")
 
-    @st.dialog("Ingresso A")
-    def infoIngresso(item):
+    @st.dialog("Ingresso Detalhes")
+    def info_ingresso(item):
         st.write(f"Descrição do Ingresso {item}")
         if st.button("Fechar"):
             st.rerun()
 
-    ingressos = [{
-        "nome": "Ingresso A",
-        "evento": "Evento X",
-        "data": "25/12/2025"
-        }, {
-        "nome": "Ingresso B",
-        "evento": "Evento Y",
-        "data": "01/01/2026"
-        }
+    ingressos = [
+        {"nome": "Ingresso A", "evento": "Evento X", "data": "25/12/2025"},
+        {"nome": "Ingresso B", "evento": "Evento Y", "data": "01/01/2026"}
     ]
 
     for ingresso in ingressos:
         st.write(f"**{ingresso['nome']}** - {ingresso['evento']} - {ingresso['data']}")
         if st.button(f"Exibir informações do {ingresso['nome']}"):
-            infoIngresso(ingresso['nome'])
+            info_ingresso(ingresso['nome'])
         st.write("---")
+
 
 def pagina_area_alimentos():
     st.header("Área de Alimentos")
     tab1, tab2, tab3 = st.tabs(["Cardápio", "Carrinho", "Retirar"])
-    
+
     with tab1:
         cardapio = [
-            {"nome": "Hambúrguer", "preco": 20.0, "categoria": "Lanches", "img": "https://user-images.githubusercontent.com/20684618/31289519-9ebdbe1a-aae6-11e7-8f82-bf794fdd9d1a.png", "descricao": "Hambúrguer artesanal com queijo e bacon."},
-            {"nome": "Pizza", "preco": 35.0, "categoria": "Lanches", "img": "https://user-images.githubusercontent.com/20684618/31289519-9ebdbe1a-aae6-11e7-8f82-bf794fdd9d1a.png", "descricao": "Pizza de mussarela com borda recheada."},
-            {"nome": "Refrigerante", "preco": 5.0, "categoria": "Bebidas", "img": "https://user-images.githubusercontent.com/20684618/31289519-9ebdbe1a-aae6-11e7-8f82-bf794fdd9d1a.png", "descricao": "Lata 350ml de refrigerante gelado."},
-            {"nome": "Suco Natural", "preco": 7.0, "categoria": "Bebidas", "img": "https://user-images.githubusercontent.com/20684618/31289519-9ebdbe1a-aae6-11e7-8f82-bf794fdd9d1a.png", "descricao": "Suco de laranja natural."},
-            {"nome": "Sorvete", "preco": 10.0, "categoria": "Sobremesas", "img": "https://user-images.githubusercontent.com/20684618/31289519-9ebdbe1a-aae6-11e7-8f82-bf794fdd9d1a.png", "descricao": "Taça de sorvete com cobertura de chocolate."}
+            {"nome": "Hambúrguer", "preco": 20.0, "categoria": "Lanches",
+             "img": "https://user-images.githubusercontent.com/20684618/31289519-9ebdbe1a-aae6-11e7-8f82-bf794fdd9d1a.png",
+             "descricao": "Hambúrguer artesanal com queijo e bacon."},
+            {"nome": "Pizza", "preco": 35.0, "categoria": "Lanches",
+             "img": "https://user-images.githubusercontent.com/20684618/31289519-9ebdbe1a-aae6-11e7-8f82-bf794fdd9d1a.png",
+             "descricao": "Pizza de mussarela com borda recheada."},
+            {"nome": "Refrigerante", "preco": 5.0, "categoria": "Bebidas",
+             "img": "https://user-images.githubusercontent.com/20684618/31289519-9ebdbe1a-aae6-11e7-8f82-bf794fdd9d1a.png",
+             "descricao": "Lata 350ml de refrigerante gelado."}
         ]
 
-        categorias = ["Todos"] + sorted(set([item["categoria"] for item in cardapio]))
-
+        categorias = ["Todos"] + sorted(set(item["categoria"] for item in cardapio))
         if "carrinho" not in st.session_state:
             st.session_state.carrinho = {item["nome"]: 0 for item in cardapio}
 
-        st.write("## Cardápio")
         filtro = st.selectbox("Filtrar por categoria", categorias)
-
         itens_filtrados = [item for item in cardapio if filtro == "Todos" or item["categoria"] == filtro]
 
         for item in itens_filtrados:
             col1, col2 = st.columns([1, 2])
-            with col1:
-                st.image(item["img"], width=120)
+            with col1: st.image(item["img"], width=120)
             with col2:
                 st.markdown(f"### {item['nome']}")
                 st.caption(f"R$ {item['preco']:.2f}")
                 st.write(item["descricao"])
                 if st.button("Adicionar ao Carrinho", key=f"add_{item['nome']}"):
-                    st.session_state.carrinho[item["nome"]] += 1
+                    st.session_state.carrinho[item['nome']] += 1
                     st.success(f"{item['nome']} adicionado ao carrinho!")
-    
+
     with tab2:
         st.subheader("Carrinho")
-        itens = [
-            {"Alimento": "Refrigerante", "Quantidade": 2},
-            {"Alimento": "Pipoca", "Quantidade": 1}
-        ]
+        itens = [{"Alimento": alimento, "Quantidade": quantidade} for alimento, quantidade in st.session_state.carrinho.items() if quantidade > 0]
+        if not itens:
+            st.info("Carrinho vazio.")
+        else:
+            for item in itens:
+                col1, col2, col3 = st.columns([3, 1, 1])
+                with col1:
+                    st.markdown(f"""
+                    <div style="background-color:#262730; padding:15px; border-radius:10px;">
+                        <strong>{item['Alimento']}</strong><br>
+                        Quantidade: {item['Quantidade']}
+                    </div>
+                    """, unsafe_allow_html=True)
+                with col2:
+                    if st.button("+", key=f"mais_{item['Alimento']}"):
+                        st.session_state.carrinho[item['Alimento']] += 1
+                        st.rerun()
+                with col3:
+                    if st.button("-", key=f"menos_{item['Alimento']}"):
+                        st.session_state.carrinho[item['Alimento']] = max(0, st.session_state.carrinho[item['Alimento']] - 1)
+                        st.rerun()
+            if st.button("Finalizar Compra"):
+                st.success("Compra finalizada com sucesso!")
 
-        st.write("Itens no carrinho:")
-
-        for item in itens:
-            col1, col2, col3 = st.columns([3, 1, 1])
-            
-            with col1:
-                st.markdown(f"""
-                <div style="background-color:#262730; padding:15px; border-radius:10px;">
-                    <strong>{item['Alimento']}</strong><br>
-                    Quantidade: {item['Quantidade']}
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col2:
-                if st.button("aumentar", key=f"add_{item}"):
-                    # aumentar quantidade
-                    pass
-            
-            with col3:
-                if st.button("diminuir", key=f"remove_{item}"):
-                    # diminuir quantidade
-                    pass
-
-        st.write("---")
-        finalizar = st.button("Finalizar Compra")
-
-        if finalizar:
-            st.success("Compra finalizada com sucesso!")
-            
     with tab3:
         st.subheader("Retirar")
-        st.write("Compra 99999")
+        st.write("Compra #99999 disponível para retirada.")
+
 
 def pagina_central_eventos():
     st.header("Central de Eventos")
@@ -229,96 +170,45 @@ def pagina_central_eventos():
 
 
 def pagina_selecionar_evento_admin():
-    st.header("Selecione um Evento para Gerenciar")
-
-    eventos_disponiveis = ["Show Rock Brasil", "Festival de Cinema", "Conferência Tech"]
-    st.selectbox(
-        "Escolha um evento",
-        ["Selecione..."] + eventos_disponiveis,
-        key="evento_admin_selecionado_box",
-        on_change=handle_evento_admin_selecionado
-    )
-    
-    st.markdown("---")
-    st.button("Criar Novo Evento", on_click=mudar_pagina_admin, args=("CRUD Eventos",))
+    st.header("Selecionar Evento Admin")
 
 def pagina_estatisticas_evento():
-    if st.session_state.evento_admin_selecionado:
-        st.header(f"Estatísticas de {st.session_state.evento_admin_selecionado}")
-        st.info("Total de ingressos vendidos: 1500, Receita total: R$ 75.000")
-    else:
-        st.warning("Nenhum evento selecionado. Por favor, selecione um evento na sidebar.")
+    st.header("Estatísticas do Evento")
 
 def pagina_configurar_area_alimentos():
-    if st.session_state.evento_admin_selecionado:
-        st.header(f"Configurar Área de Alimentos - {st.session_state.evento_admin_selecionado}")
-        st.subheader("CRUD de Alimentos")
-        st.text_input("Nome do Alimento")
-        st.number_input("Preço", min_value=0.01, format="%.2f")
-        st.text_area("Descrição")
-        col_crud_alimentos_1, col_crud_alimentos_2, col_crud_alimentos_3 = st.columns(3)
-        with col_crud_alimentos_1: st.button("Adicionar Alimento")
-        with col_crud_alimentos_2: st.button("Editar Alimento")
-        with col_crud_alimentos_3: st.button("Deletar Alimento")
-
-        st.subheader("Lista de Alimentos")
-        st.table({"Alimento": ["Refrigerante", "Pipoca", "Cerveja"], "Preço": ["R$ 5.00", "R$ 10.00", "R$ 12.00"]})
-    else:
-        st.warning("Nenhum evento selecionado. Por favor, selecione um evento na sidebar.")
+    st.header("Configurar Área de Alimentos")
 
 def pagina_configurar_central_eventos():
     st.header("Configurar Central de Eventos")
-    st.subheader("CRUD de Eventos")
-    st.text_input("Nome do Evento")
-    st.date_input("Data do Evento")
-    st.text_input("Local do Evento")
-    col_crud_eventos_1, col_crud_eventos_2, col_crud_eventos_3 = st.columns(3)
-    with col_crud_eventos_1: st.button("Adicionar Evento")
-    with col_crud_eventos_2: st.button("Editar Evento")
-    with col_crud_eventos_3: st.button("Deletar Evento")
-
-    st.subheader("Lista de Eventos Existentes")
-    st.table({"Evento": ["Show Rock Brasil", "Festival de Cinema"], "Data": ["2025-08-10", "2025-09-20"]})
 
 def pagina_configurar_ingresso_especifico():
-    if st.session_state.evento_admin_selecionado:
-        st.header(f"Configurar Ingresso Específico - {st.session_state.evento_admin_selecionado}")
-        st.subheader("Tipos de Ingresso")
-        st.text_input("Nome do Tipo de Ingresso (Ex: Pista, Camarote)")
-        st.number_input("Preço Base", min_value=0.01, format="%.2f", key="preco_ingresso")
-        st.number_input("Quantidade Disponível", min_value=1, step=1, key="qtd_ingresso")
-        col_ingresso_1, col_ingresso_2, col_ingresso_3 = st.columns(3)
-        with col_ingresso_1: st.button("Adicionar Tipo de Ingresso")
-        with col_ingresso_2: st.button("Editar Tipo de Ingresso")
-        with col_ingresso_3: st.button("Deletar Tipo de Ingresso")
+    st.header("Configurar Ingresso Específico")
 
-        st.subheader("Lotes de Ingressos")
-        st.text_input("Nome do Lote (Ex: Lote 1, Promocional)")
-        st.number_input("Preço do Lote", min_value=0.01, format="%.2f", key="preco_lote")
-        st.number_input("Quantidade do Lote", min_value=1, step=1, key="qtd_lote")
-        st.date_input("Data de Início da Venda")
-        st.date_input("Data de Fim da Venda")
-        col_lote_1, col_lote_2, col_lote_3 = st.columns(3)
-        with col_lote_1: st.button("Adicionar Lote")
-        with col_lote_2: st.button("Editar Lote")
-        with col_lote_3: st.button("Deletar Lote")
 
-        st.subheader("Lista de Tipos de Ingresso e Lotes")
-        st.table({
-            "Tipo": ["Pista", "Camarote"],
-            "Preço": ["R$ 50.00", "R$ 150.00"],
-            "Disponível": ["1000", "200"]
-        })
+def checarLogin(usuario, senha):
+    if usuario == "cliente" and senha == "123":
+        return "cliente"
+    elif usuario == "admin" and senha == "admin":
+        return "admin"
+    return None
+
+
+def verificaFuncao(usuario, senha):
+    resultado = checarLogin(usuario, senha)
+    if resultado == "cliente":
+        st.session_state.role = "cliente"
+    elif resultado == "admin":
+        st.session_state.role = "admin"
     else:
-        st.warning("Nenhum evento selecionado. Por favor, selecione um evento na sidebar.")
+        st.error("Usuário ou senha incorretos.")
 
-def renderizar_login():
+
+def pagina_login():
     st.title("Bem-vindo")
     st.divider()
     st.markdown("### Login")
-
-    usuario = st.text_input("Usuário", key="login_usuario")
-    senha = st.text_input("Senha", type="password", key="login_senha")
+    usuario = st.text_input("Usuário")
+    senha = st.text_input("Senha", type="password")
 
     col1, col2 = st.columns(2)
 
@@ -327,8 +217,8 @@ def renderizar_login():
             "Login",
             use_container_width=True,
             type="primary",
-            on_click=handle_login,
-            args=(st.session_state.login_usuario, st.session_state.login_senha)
+            on_click=verificaFuncao,
+            args=(usuario, senha)
         )
 
     with col2:
@@ -336,88 +226,48 @@ def renderizar_login():
         with col3:
             st.markdown("###### Não possui conta?")
         with col4:
-            st.button("Cadastrar", use_container_width=True, on_click=mudar_pagina, args=("cadastrar",))
-
-def renderizar_cadastro():
-    st.title("Cadastrar Novo Usuário")
-    st.button("Voltar para Login", on_click=mudar_pagina, args=("login",))
-
-def renderizar_cliente():
-    st.sidebar.title("Menu do Cliente")
-    st.sidebar.write("---")
-
-    opcoes_cliente = ["Meus Ingressos", "Área de Alimentos", "Central de Eventos"]
-    
-    selected_option = st.sidebar.radio(
-        "Navegar", opcoes_cliente, index=opcoes_cliente.index(st.session_state.cliente_pagina_selecionada)
-    )
-    if selected_option != st.session_state.cliente_pagina_selecionada:
-        st.session_state.cliente_pagina_selecionada = selected_option
-        st.rerun()
-
-    st.sidebar.markdown("---")
-    st.sidebar.title("Informações Pessoais")
-    st.sidebar.write("Nome: Cliente Exemplo")
-    st.sidebar.button("Sair", on_click=mudar_pagina, args=("login",))
-
-    if st.session_state.cliente_pagina_selecionada == "Meus Ingressos":
-        pagina_meus_ingressos()
-    elif st.session_state.cliente_pagina_selecionada == "Área de Alimentos":
-        pagina_area_alimentos()
-    elif st.session_state.cliente_pagina_selecionada == "Central de Eventos":
-        pagina_central_eventos()
-
-def renderizar_admin():
-    st.sidebar.title("Menu do Administrador")
-
-    if st.session_state.evento_admin_selecionado:
-        st.sidebar.subheader(f"Gerenciando: {st.session_state.evento_admin_selecionado}")
-        opcoes_admin = [
-            "Estatísticas do Evento",
-            "Configurar Área de Alimentos",
-            "Configurar Ingresso Específico",
-            "Configurar Central de Eventos",
-            "Selecionar Outro Evento"
-        ]
-        if st.sidebar.button("Estatísticas do Evento"):
-            mudar_pagina_admin("Estatísticas do Evento")
-        if st.sidebar.button("Configurar Área de Alimentos"):
-            mudar_pagina_admin("Configurar Área de Alimentos")
-        if st.sidebar.button("Configurar Ingresso Específico"):
-            mudar_pagina_admin("Configurar Ingresso Específico")
-        if st.sidebar.button("Configurar Central de Eventos"):
-            mudar_pagina_admin("Configurar Central de Eventos")
-        if st.sidebar.button("Selecionar Outro Evento"):
-            st.session_state.evento_admin_selecionado = None
-            mudar_pagina_admin("Selecionar Evento Admin")
-
-    else:
-        opcoes_admin = ["Selecionar Evento Admin", "Configurar Central de Eventos"]
-        if st.sidebar.button("Selecionar Evento Admin"):
-            mudar_pagina_admin("Selecionar Evento Admin")
-        if st.sidebar.button("Configurar Central de Eventos"):
-            mudar_pagina_admin("Configurar Central de Eventos")
-    
-    st.sidebar.markdown("---")
-    st.sidebar.button("Sair (Admin)", on_click=mudar_pagina, args=("login",))
-    
-    if st.session_state.admin_pagina_selecionada == "Selecionar Evento Admin":
-        pagina_selecionar_evento_admin()
-    elif st.session_state.admin_pagina_selecionada == "Estatísticas do Evento":
-        pagina_estatisticas_evento()
-    elif st.session_state.admin_pagina_selecionada == "Configurar Área de Alimentos":
-        pagina_configurar_area_alimentos()
-    elif st.session_state.admin_pagina_selecionada == "Configurar Central de Eventos":
-        pagina_configurar_central_eventos()
-    elif st.session_state.admin_pagina_selecionada == "Configurar Ingresso Específico":
-        pagina_configurar_ingresso_especifico()
+            st.button("Cadastrar", use_container_width=True, on_click=mudarCadastrar, args=())
 
 
-if st.session_state.pagina_atual == "login":
-    renderizar_login()
-elif st.session_state.pagina_atual == "cadastrar":
-    renderizar_cadastro()
-elif st.session_state.pagina_atual == "cliente":
-    renderizar_cliente()
-elif st.session_state.pagina_atual == "admin":
-    renderizar_admin()
+def mudarCadastrar():
+    st.session_state.auth_user = "cadastrar"
+
+def pagina_cadastrar():
+    st.title("Cadastro")
+    st.divider()
+
+
+    def ir_para_login():
+        st.session_state.auth_user = "login"
+        
+    st.button("Voltar ao Login", on_click=ir_para_login)
+
+
+if "role" not in st.session_state:
+    st.session_state.role = None
+if "auth_user" not in st.session_state:
+    st.session_state.auth_user = "login"
+
+if st.session_state.role is None:
+    if st.session_state.auth_user == "login":
+        pagina_login()
+    elif st.session_state.auth_user == "cadastrar":
+        pagina_cadastrar()
+
+elif st.session_state.role == "cliente":
+    nav = st.navigation([
+        st.Page(pagina_meus_ingressos, title="Meus Ingressos", icon="🎟️"),
+        st.Page(pagina_area_alimentos, title="Área de Alimentos", icon="🍔"),
+        st.Page(pagina_central_eventos, title="Central de Eventos", icon="🎉"),
+    ])
+    nav.run()
+
+elif st.session_state.role == "admin":
+    nav = st.navigation([
+        st.Page(pagina_selecionar_evento_admin, title="Selecionar Evento Admin", icon="📋"),
+        st.Page(pagina_estatisticas_evento, title="Estatísticas do Evento", icon="📊"),
+        st.Page(pagina_configurar_area_alimentos, title="Configurar Área de Alimentos", icon="🍽️"),
+        st.Page(pagina_configurar_ingresso_especifico, title="Configurar Ingresso Específico", icon="🎫"),
+        st.Page(pagina_configurar_central_eventos, title="Configurar Central de Eventos", icon="🛠️"),
+    ])
+    nav.run()
