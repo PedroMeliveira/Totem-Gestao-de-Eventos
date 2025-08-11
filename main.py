@@ -213,8 +213,8 @@ def pagina_login():
     st.title("Bem-vindo")
     st.divider()
     st.markdown("### Login")
-    usuario = st.text_input("Usuário")
-    senha = st.text_input("Senha", type="password")
+    email = st.text_input("Email")
+    senha_digitada = st.text_input("Senha", type="password")
 
     col1, col2 = st.columns(2)
 
@@ -224,8 +224,29 @@ def pagina_login():
             use_container_width=True,
             type="primary",
             on_click=verificaFuncao,
-            args=(usuario, senha)
+            args=(email, senha_digitada)
         )
+    ####APOS CLICAR NO BOTAO DE ENTRAR/CONFIRMAR LOGIN
+
+    query = "SELECT Nome, Senha FROM Clientes WHERE Email = %s"
+    cursor.execute(query, (email,))
+
+    user_data = cursor.fetchone()
+
+    if user_data is not None:
+        nome, senha_bd = user_data
+        senha_digitada_bytes = senha_digitada.encode('uft-8')
+        if bcrypt.checkpw(senha_digitada_bytes, senha_bd):
+            #AVISAR QUE DEU TUDO CERTO E IR PRA PROXIMA TELA
+            st.session_state.nome_cliente = nome
+            pass
+        
+        else:
+            #AVISAR QUE A SENHA TA ERRADA E MANDAR ESCREVER DENOVO
+            pass
+    else:
+        #AVISAR QUE NAO EXISTE ESSE EMAIL NO CADASTRADO E MANDAR ESCREVER DENOVO
+        pass
 
     with col2:
         col3, col4 = st.columns(2)
