@@ -53,7 +53,7 @@ def pagina_area_alimentos():
                 st.markdown(f"### {item['nome']}")
                 st.caption(f"R$ {item['preco']:.2f}")
                 st.write(item["descricao"])
-                if st.button("Adicionar ao Carrinho", key=f"add_{item['nome']}"):
+                if st.button("Adicionar ao Carrinho", type='primary', key=f"add_{item['nome']}"):
                     st.session_state.carrinho[item['nome']] += 1
                     st.success(f"{item['nome']} adicionado ao carrinho!")
 
@@ -111,7 +111,7 @@ def pagina_central_eventos():
                 st.write(f"**Data:** {evento['data']}")
                 st.write(f"**Local:** {evento['local']}")
                 st.write(evento["descricao"])
-                if st.button("Participar", key=f"participar_{evento['nome']}"):
+                if st.button("Participar", type='primary', key=f"participar_{evento['nome']}"):
                     st.success(f"{evento['nome']} foi adicionado ao carrinho!")
             return detalhes
         
@@ -123,7 +123,7 @@ def pagina_central_eventos():
                 st.image(evento["imagem"], use_container_width=True)
                 st.markdown(f"**{evento['nome']}**")
                 st.caption(f"{evento['data']} - {evento['local']}")
-                if st.button("Ver mais detalhes", key=f"detalhes_{evento['nome']}"):
+                if st.button("Ver mais detalhes", type='primary', key=f"detalhes_{evento['nome']}"):
                     criar_dialogo(evento)()
 
             if (i + 1) % 3 == 0:
@@ -235,6 +235,11 @@ def mudarCadastrar():
 def pagina_cadastrar():
     st.title("Cadastro")
     st.divider()
+    
+    nome = st.text_input("Insira seu nome")
+    email = st.text_input("Insira seu email")
+    data_nascimento = st.date_input("Insira sua data de nascimento")
+    senha = st.text_input("Insira sua senha")
 
 
     def ir_para_login():
