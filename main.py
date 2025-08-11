@@ -274,5 +274,5 @@ elif st.session_state.role == "admin":
         st.Page(pagina_configurar_area_alimentos, title="Configurar Área de Alimentos", icon="🍽️"),
         st.Page(pagina_configurar_ingresso_especifico, title="Configurar Ingresso Específico", icon="🎫"),
         st.Page(pagina_configurar_central_eventos, title="Configurar Central de Eventos", icon="🛠️"),
-    ])
+    ],)
     nav.run()
