@@ -1,11 +1,19 @@
 import streamlit as st
 
-# Título da aplicação
-st.title("Exemplo de Fontes no Streamlit")
+# Adicionando conteúdo inicial à sidebar
+st.sidebar.title("Minha Sidebar")
+st.sidebar.write("Alguns elementos na parte superior.")
 
-# Texto em fontes diferentes
-st.markdown("<h3 style='font-family:sans-serif;'>Texto com fonte Sans Serif</h3>", unsafe_allow_html=True)
-st.markdown("<h3 style='font-family:monospace;'>Texto com fonte Monospace</h3>", unsafe_allow_html=True)
-st.markdown("<h3 style='font-family:serif;'>Texto com fonte Serif</h3>", unsafe_allow_html=True)
-st.markdown("<h3 style='font-family:courier;'>Texto com fonte Courier</h3>", unsafe_allow_html=True)
-st.markdown("<h3 style='font-family:arial;'>Texto com fonte Arial</h3>", unsafe_allow_html=True)
+# Usando CSS para adicionar margens e empurrar o botão para o final
+st.markdown("""
+    <style>
+        .css-1d391kg .stButton {
+            margin-top: auto;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# Botão no final
+st.sidebar.button("Botão no final")
+
+# https://www.youtube.com/watch?v=lrhT3fGU4aE
