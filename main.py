@@ -1,4 +1,10 @@
 import streamlit as st
+import sqlite3
+import bcrypt
+
+conexao = sqlite3.connect('dados.db')
+cursor = conexao.cursor()
+
 
 def pagina_meus_ingressos():
     st.header("Meus Ingressos")
@@ -242,6 +248,29 @@ def pagina_cadastrar():
     senha = st.text_input("Insira sua senha")
 
 
+    #######APOS CLICAR BOTAO DE CADASTRO
+    query = "SELECT Email FROM Clientes WHERE Email = %s"
+    cursor.execute(query, (email,))
+
+    resultado = cursor.fetchone() 
+
+    if resultado is not None:
+        #AVISAR QUE JA ESTA CADASTRADO E PEDIR PRA USAR OUTRO EMAIL OU LOGAR
+        pass
+
+    else:
+        #AVISAR  QUE DEU CERTO
+        senha_bytes = bcrypt.senha.encode('utf-8')
+        sal = bcrypt.gensalt()
+        senha_hash = bcrypt.hashpw(senha_bytes, sal)
+
+        cursor.execute("INSERT INTO Clientes (Nome, Data_Nasc, Email, Senha) VALUES (?, ?, ?, ?)" (nome, data_nascimento, email, senha_hash))
+        conexao.commit()
+
+        cliente_id = cursor.lastrowid()
+        st.session_state.cliente_id = cliente_id
+
+    ############ IR PRA TELA INICIAL
     def ir_para_login():
         st.session_state.auth_user = "login"
         
