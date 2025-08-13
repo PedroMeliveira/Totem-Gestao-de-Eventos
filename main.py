@@ -193,7 +193,7 @@ def pagina_configurar_ingresso_especifico():
 
 
 def checaLogin(email, senha):
-    query = "SELECT Nome, Senha FROM Clientes WHERE Email = %s"
+    query = "SELECT Nome, Senha FROM Clientes WHERE Email = ?"
     cursor.execute(query, (email,))
 
     user_data = cursor.fetchone()
