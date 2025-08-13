@@ -8,12 +8,6 @@ cursor = conexao.cursor()
 
 
 def pagina_crud_eventos():
-    st.header("CRUD Eventos")
-    if st.button("Adicionar Evento", type='primary'):
-        adicionarEvento()
-    
-
-def adicionarEvento():
     tab1, tab2 = st.tabs(["Editar/Remover Evento", "Adicionar Evento"])
     with tab1:
         if "eventos" not in st.session_state:
@@ -84,10 +78,11 @@ def adicionarEvento():
                 nome = st.text_input("Nome", value=evento["nome"])
                 data = st.text_input("Data", value=evento["data"])
                 local = st.text_input("Local", value=evento["local"])
+                imagem = st.text_input("Imagem", value=evento["imagem"])
                 descricao = st.text_area("Descrição", value=evento["descricao"])
 
                 if st.button("Salvar alterações", type="primary"):
-                    salvar_edicao(evento["id"], nome, data, local, descricao)
+                    salvar_edicao(evento["id"], nome, data, local, imagem, descricao)
 
             editar()
 
@@ -122,16 +117,25 @@ def adicionarEvento():
         col1, col2 = st.columns(2)
         with col1:
             data = st.date_input("Data")
+            local = st.text_input("Local")
+            
         with col2:
             imagem = st.text_input("Imagem")
-            st.write("Preview da imagem")
-            
-        ingressos = 1 # colocar um popover que vai configurar quantos ingressos vão ter
-        local = st.text_input("Local")
+        
+            with st.popover("Ingressos"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    qntd_ingresso = st.text_input("Qntd de ingressos")
+                
+                with col2:
+                    valor_ingresso = st.text_input("Valor do ingresso")
+                
         descricao = st.text_area("Descrição")
 
-        if st.button("Adicionar Evento", type="primary"):
-            salvarEventoBD(nome, data, local, descricao, ingressos)
+        col3, col4, col5 = st.columns(3)
+        with col4:
+            if st.button("Adicionar Evento", type="primary"):
+                salvarEventoBD(nome, data, local, descricao, qntd_ingresso, valor_ingresso)
 
 
 def salvarEventoBD(nome, data, local, descricao, ingressos):
