@@ -238,53 +238,14 @@ def pagina_cadastrar():
     
     nome = st.text_input("Insira seu nome")
 
+    # só deixar entrar número
     cpf = st.text_input("Insira seu CPF")
 
     email = st.text_input("Insira seu email")
 
-    # conexao = sqlite3.connect('dados.db')
-    # cursor = conexao.cursor()
-
-    # cursor.execute("SELECT Email FROM Clientes WHERE Email = ?", (email,))
-    # resultado = cursor.fetchone()
-
-    # if resultado:
-    #     #AVISAR QUE JA POSSUI ESSE EMAIL REGISTRADO
-    #     pass
-    
-    # else:
-    #     padrao = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    #     email_valido = bool(re.match(padrao, email))
-
-    #     if not email_valido:
-    #         #AVISAR QUE EMAIL FOI ESCRITO ERRADO
-            # pass
-
     data_nascimento = st.date_input("Insira sua data de nascimento")
 
     senha = st.text_input("Insira sua senha", type="password")
-    # senha_valida = True
-
-    # if len(senha) < 8:
-    #     #AVISAR QUE DEVE TER NO MINIMO 8 CARACTER
-    #     senha_valida = False
-
-    # if not re.search(r'[A-Z]', senha):
-    #     #AVISAR QUE PRECISA TER UMA LETRA MAISCULA
-    #     senha_valida = False
-
-    # if not re.search(r'[a-z]', senha):
-    #     #AVISAR QUE PRECISA TER UMA LETRA MINUSCULA
-    #     senha_valida = False
-
-    # if not re.search(r'\d', senha):
-    #     #AVISAR QUE PRECISA TER UM DIGITO
-    #     senha_valida = False
-
-    # if not re.search(r'[\W_]', senha):
-    #     #AVISAR QUE PRECISA DE CARACTER ESPECIAL
-    #     senha_valida = False
-
 
     col1, col2, col3= st.columns(3)
     with col1:
@@ -324,6 +285,41 @@ def realizaCadastro(nome, cpf, email, data_nascimento, senha):
         cliente_id = cursor.lastrowid()
         st.session_state.cliente_id = cliente_id
         ir_para_login()
+    
+    
+    #### email
+    
+    # else:
+    #     padrao = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    #     email_valido = bool(re.match(padrao, email))
+
+    #     if not email_valido:
+    #         #AVISAR QUE EMAIL FOI ESCRITO ERRADO
+    #         pass
+
+
+    ### senha
+    senha_valida = True
+
+    if len(senha) < 8:
+        #AVISAR QUE DEVE TER NO MINIMO 8 CARACTER
+        senha_valida = False
+
+    if not re.search(r'[A-Z]', senha):
+        #AVISAR QUE PRECISA TER UMA LETRA MAISCULA
+        senha_valida = False
+
+    if not re.search(r'[a-z]', senha):
+        #AVISAR QUE PRECISA TER UMA LETRA MINUSCULA
+        senha_valida = False
+
+    if not re.search(r'\d', senha):
+        #AVISAR QUE PRECISA TER UM DIGITO
+        senha_valida = False
+
+    if not re.search(r'[\W_]', senha):
+        #AVISAR QUE PRECISA DE CARACTER ESPECIAL
+        senha_valida = False
         
 
 if "role" not in st.session_state:
