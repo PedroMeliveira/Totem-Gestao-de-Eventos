@@ -7,6 +7,7 @@ cursor.execute('''
     CREATE TABLE IF NOT EXISTS Clientes (
         ID INTEGER PRIMARY KEY AUTOINCREMENT,
         Nome TEXT NOT NULL,
+        CPF TEXT NOT NULL,
         Data_Nasc TEXT NOT NULL,
         Email TEXT NOT NULL,
         Senha BLOB NOT NULL

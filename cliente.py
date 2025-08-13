@@ -238,6 +238,8 @@ def pagina_cadastrar():
     
     nome = st.text_input("Insira seu nome")
 
+    cpf = st.text_input("Insira seu CPF")
+
     email = st.text_input("Insira seu email")
 
     # conexao = sqlite3.connect('dados.db')
@@ -261,7 +263,6 @@ def pagina_cadastrar():
     data_nascimento = st.date_input("Insira sua data de nascimento")
 
     senha = st.text_input("Insira sua senha", type="password")
-    
     # senha_valida = True
 
     # if len(senha) < 8:
@@ -284,9 +285,6 @@ def pagina_cadastrar():
     #     #AVISAR QUE PRECISA DE CARACTER ESPECIAL
     #     senha_valida = False
 
-    
-
-    cpf = "1"
 
     col1, col2, col3= st.columns(3)
     with col1:
