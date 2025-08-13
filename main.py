@@ -2,6 +2,7 @@ import streamlit as st
 import sqlite3
 import bcrypt
 
+
 conexao = sqlite3.connect('dados.db')
 cursor = conexao.cursor()
 
@@ -191,22 +192,27 @@ def pagina_configurar_ingresso_especifico():
     st.header("Configurar Ingresso Específico")
 
 
-def checarLogin(usuario, senha):
-    if usuario == "cliente" and senha == "123":
-        return "cliente"
-    elif usuario == "admin" and senha == "admin":
-        return "admin"
-    return None
+def checaLogin(email, senha):
+    query = "SELECT Nome, Senha FROM Clientes WHERE Email = %s"
+    cursor.execute(query, (email,))
 
+    user_data = cursor.fetchone()
 
-def verificaFuncao(usuario, senha):
-    resultado = checarLogin(usuario, senha)
-    if resultado == "cliente":
-        st.session_state.role = "cliente"
-    elif resultado == "admin":
-        st.session_state.role = "admin"
+    if user_data is not None:
+        nome, senha_bd = user_data
+        senha_bytes = senha.encode('uft-8')
+        if bcrypt.checkpw(senha_bytes, senha_bd):
+            st.session_state.nome_cliente = nome
+            st.session_state.role = "cliente"
+            pass
+        
+        else:
+            st.error("Senha inválida, tente novamente.")
+            pass
     else:
-        st.error("Usuário ou senha incorretos.")
+        st.error("Esse email não está cadastrado em nossos sistemas.")
+        pass
+
 
 
 def pagina_login():
@@ -223,30 +229,9 @@ def pagina_login():
             "Login",
             use_container_width=True,
             type="primary",
-            on_click=verificaFuncao,
+            on_click=checaLogin,
             args=(email, senha_digitada)
         )
-    ####APOS CLICAR NO BOTAO DE ENTRAR/CONFIRMAR LOGIN
-
-    query = "SELECT Nome, Senha FROM Clientes WHERE Email = %s"
-    cursor.execute(query, (email,))
-
-    user_data = cursor.fetchone()
-
-    if user_data is not None:
-        nome, senha_bd = user_data
-        senha_digitada_bytes = senha_digitada.encode('uft-8')
-        if bcrypt.checkpw(senha_digitada_bytes, senha_bd):
-            #AVISAR QUE DEU TUDO CERTO E IR PRA PROXIMA TELA
-            st.session_state.nome_cliente = nome
-            pass
-        
-        else:
-            #AVISAR QUE A SENHA TA ERRADA E MANDAR ESCREVER DENOVO
-            pass
-    else:
-        #AVISAR QUE NAO EXISTE ESSE EMAIL NO CADASTRADO E MANDAR ESCREVER DENOVO
-        pass
 
     with col2:
         col3, col4 = st.columns(2)
@@ -259,28 +244,22 @@ def pagina_login():
 def mudarCadastrar():
     st.session_state.auth_user = "cadastrar"
 
-def pagina_cadastrar():
-    st.title("Cadastro")
-    st.divider()
-    
-    nome = st.text_input("Insira seu nome")
-    email = st.text_input("Insira seu email")
-    data_nascimento = st.date_input("Insira sua data de nascimento")
-    senha = st.text_input("Insira sua senha")
+
+def ir_para_login():
+    st.session_state.auth_user = "login"
 
 
-    #######APOS CLICAR BOTAO DE CADASTRO
+def realizaCadastro(nome, cpf, email, data_nascimento, senha):
     query = "SELECT Email FROM Clientes WHERE Email = %s"
     cursor.execute(query, (email,))
 
     resultado = cursor.fetchone() 
 
     if resultado is not None:
-        #AVISAR QUE JA ESTA CADASTRADO E PEDIR PRA USAR OUTRO EMAIL OU LOGAR
+        st.error("Esse email já está cadastrado, utilize outro email ou faça login.")
         pass
 
     else:
-        #AVISAR  QUE DEU CERTO
         senha_bytes = bcrypt.senha.encode('utf-8')
         sal = bcrypt.gensalt()
         senha_hash = bcrypt.hashpw(senha_bytes, sal)
@@ -290,12 +269,36 @@ def pagina_cadastrar():
 
         cliente_id = cursor.lastrowid()
         st.session_state.cliente_id = cliente_id
+        ir_para_login()
 
-    ############ IR PRA TELA INICIAL
-    def ir_para_login():
-        st.session_state.auth_user = "login"
-        
-    st.button("Voltar ao Login", on_click=ir_para_login)
+
+def pagina_cadastrar():
+    st.title("Cadastro")
+    st.divider()
+    
+    nome = st.text_input("Insira seu nome")
+    email = st.text_input("Insira seu email")
+    data_nascimento = st.date_input("Insira sua data de nascimento")
+    senha = st.text_input("Insira sua senha")
+    
+    cpf = "1"
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.button(
+            "Cadastro",
+            use_container_width=True,
+            type="primary",
+            on_click=realizaCadastro,
+            args=(nome, cpf, email, data_nascimento, senha)
+        )
+    
+    with col2:
+        st.button(
+            "Voltar ao Login",
+            use_container_width=True,
+            on_click=ir_para_login
+        )
 
 
 if "role" not in st.session_state:

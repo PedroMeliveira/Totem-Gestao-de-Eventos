@@ -9,7 +9,7 @@ cursor.execute('''
         Nome TEXT NOT NULL,
         Data_Nasc TEXT NOT NULL,
         Email TEXT NOT NULL,
-        Senha BLOB NOT NULL    
+        Senha BLOB NOT NULL
         )
 ''')
 
