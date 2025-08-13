@@ -3,10 +3,6 @@ import sqlite3
 import bcrypt
 
 
-conexao = sqlite3.connect('dados.db')
-cursor = conexao.cursor()
-
-
 def pagina_meus_ingressos():
     st.header("Meus Ingressos")
     st.write("---")
@@ -193,8 +189,10 @@ def pagina_configurar_ingresso_especifico():
 
 
 def checaLogin(email, senha):
-    query = "SELECT Nome, Senha FROM Clientes WHERE Email = ?"
-    cursor.execute(query, (email,))
+    conexao = sqlite3.connect('dados.db')
+    cursor = conexao.cursor()
+
+    cursor.execute("SELECT Email FROM Clientes WHERE Email = ?", (email,))
 
     user_data = cursor.fetchone()
 
@@ -250,8 +248,10 @@ def ir_para_login():
 
 
 def realizaCadastro(nome, cpf, email, data_nascimento, senha):
-    query = "SELECT Email FROM Clientes WHERE Email = ?"
-    cursor.execute(query, (email,))
+    conexao = sqlite3.connect('dados.db')
+    cursor = conexao.cursor()
+
+    cursor.execute("SELECT Email FROM Clientes WHERE Email = ?", (email,))
 
     resultado = cursor.fetchone() 
 
@@ -264,10 +264,13 @@ def realizaCadastro(nome, cpf, email, data_nascimento, senha):
         sal = bcrypt.gensalt()
         senha_hash = bcrypt.hashpw(senha_bytes, sal)
 
-        cursor.execute("INSERT INTO Clientes (Nome, Data_Nasc, Email, Senha) VALUES (?, ?, ?, ?)" (nome, data_nascimento, email, senha_hash))
+        conexao = sqlite3.connect('dados.db')
+        cursor = conexao.cursor()
+
+        cursor.execute("INSERT INTO Clientes (Nome, Data_Nasc, Email, Senha) VALUES (?, ?, ?, ?)", (nome, data_nascimento, email, senha_hash))
         conexao.commit()
 
-        cliente_id = cursor.lastrowid()
+        cliente_id = cursor.lastrowid
         st.session_state.cliente_id = cliente_id
         ir_para_login()
 
