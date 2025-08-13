@@ -250,7 +250,7 @@ def ir_para_login():
 
 
 def realizaCadastro(nome, cpf, email, data_nascimento, senha):
-    query = "SELECT Email FROM Clientes WHERE Email = %s"
+    query = "SELECT Email FROM Clientes WHERE Email = ?"
     cursor.execute(query, (email,))
 
     resultado = cursor.fetchone() 
@@ -260,7 +260,7 @@ def realizaCadastro(nome, cpf, email, data_nascimento, senha):
         pass
 
     else:
-        senha_bytes = bcrypt.senha.encode('utf-8')
+        senha_bytes = senha.encode('utf-8')
         sal = bcrypt.gensalt()
         senha_hash = bcrypt.hashpw(senha_bytes, sal)
 
