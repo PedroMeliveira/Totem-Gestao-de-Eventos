@@ -192,13 +192,13 @@ def checaLogin(email, senha):
     conexao = sqlite3.connect('dados.db')
     cursor = conexao.cursor()
 
-    cursor.execute("SELECT Email FROM Clientes WHERE Email = ?", (email,))
+    cursor.execute("SELECT Nome, Senha FROM Clientes WHERE Email = ?", (email,))
 
     user_data = cursor.fetchone()
 
     if user_data is not None:
         nome, senha_bd = user_data
-        senha_bytes = senha.encode('uft-8')
+        senha_bytes = senha.encode('utf-8')
         if bcrypt.checkpw(senha_bytes, senha_bd):
             st.session_state.nome_cliente = nome
             st.session_state.role = "cliente"
