@@ -27,10 +27,11 @@ cursor.execute('''
 ''')
 
 cursor.execute('''
-    CREATE TABLE IF NOT EXISTS Ingresso (
+    CREATE TABLE IF NOT EXISTS Ingressos (
         ID INTEGER PRIMARY KEY AUTOINCREMENT,
         Cliente_ID INTEGER,
         Evento_ID INTEGER NOT NULL,
+        Valor FLOAT NOT NULL,
         FOREIGN KEY (Cliente_ID) REFERENCES Clientes(ID),
         FOREIGN KEY (Evento_ID) REFERENCES Eventos(ID)
         )
@@ -62,5 +63,15 @@ cursor.execute('''
         Alimento_ID INTEGER NOT NULL,
         FOREIGN KEY (Carrinho_ID) REFERENCES Carrinhos(ID),
         FOREIGN KEY (Alimento_ID) REFERENCES Alimentos(ID)
+        )
+''')
+
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Ingresso_no_Carrinho (
+        ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        Carrinho_ID INTEGER NOT NULL,
+        Ingresso_ID INTEGER NOT NULL,
+        FOREIGN KEY (Carrinho_ID) REFERENCES Carrinhos(ID),
+        FOREIGN KEY (Ingresso_ID) REFERENCES Ingressos(ID)
         )
 ''')
