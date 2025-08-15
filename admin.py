@@ -174,15 +174,13 @@ def pagina_login():
 
 
 def checaLogin(email, senha):
-    ### ARRUMAR PARA TABELA DE ADMINS
-    query = "SELECT Nome, Senha FROM Clientes WHERE Email = %s"
-    cursor.execute(query, (email,))
+    cursor.execute("SELECT Nome, Senha FROM Admins WHERE Email = ?", (email,))
 
     user_data = cursor.fetchone()
 
     if user_data is not None:
         nome, senha_bd = user_data
-        senha_bytes = senha.encode('uft-8')
+        senha_bytes = senha.encode('utf-8')
         if bcrypt.checkpw(senha_bytes, senha_bd):
             st.session_state.nome_admin = nome
             st.session_state.role = "admin"
@@ -225,8 +223,7 @@ def pagina_cadastrar():
         
 
 def realizaCadastro(nome, cpf, email, data_nascimento, senha):
-    query = "SELECT Email FROM Clientes WHERE Email = %s"
-    cursor.execute(query, (email,))
+    cursor.execute("SELECT Nome FROM Admins WHERE Email = ?" (email,))
 
     resultado = cursor.fetchone() 
 
@@ -235,15 +232,15 @@ def realizaCadastro(nome, cpf, email, data_nascimento, senha):
         pass
 
     else:
-        senha_bytes = bcrypt.senha.encode('utf-8')
+        senha_bytes = senha.encode('utf-8')
         sal = bcrypt.gensalt()
         senha_hash = bcrypt.hashpw(senha_bytes, sal)
 
-        cursor.execute("INSERT INTO Clientes (Nome, Data_Nasc, Email, Senha) VALUES (?, ?, ?, ?)" (nome, data_nascimento, email, senha_hash))
+        cursor.execute("INSERT INTO Admins (Nome, Data_Nasc, Email, Senha) VALUES (?, ?, ?, ?)" (nome, data_nascimento, email, senha_hash))
         conexao.commit()
 
-        cliente_id = cursor.lastrowid()
-        st.session_state.cliente_id = cliente_id
+        admin_id = cursor.lastrowid()
+        st.session_state.admin_id = admin_id
         ir_para_dashboard()
 
 
