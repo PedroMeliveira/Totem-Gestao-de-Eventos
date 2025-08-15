@@ -15,10 +15,13 @@ def pagina_crud_eventos():
                 {
                     "id": i,
                     "nome": f"Evento {i+1}",
+                    "horario": "XX:XX",
                     "data": f"{10+i}/08/2025",
                     "local": f"Local {chr(65 + i)}",
                     "descricao": "Descrição do evento",
-                    "imagem": "https://user-images.githubusercontent.com/20684618/31289519-9ebdbe1a-aae6-11e7-8f82-bf794fdd9d1a.png"
+                    "imagem": "https://user-images.githubusercontent.com/20684618/31289519-9ebdbe1a-aae6-11e7-8f82-bf794fdd9d1a.png",
+                    "qntd_ingresos_disponiveis": 0,
+                    "preco_ingressos": 0.1
                 }
                 for i in range(6)
             ]
