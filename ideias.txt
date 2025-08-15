@@ -4,9 +4,10 @@ painel de cliente e de admin:
 
 # https://www.youtube.com/watch?v=lrhT3fGU4aE
 
+# tratar dados numéricos
+
 painel de cliente:
     - buscar eventos por filtros -> data, faixa de preço, localização
-    - comprar apenas ingressos específicos (vip etc), sem assentos específicos
 
     (meus ingressos) - fazer cada ingresso ser um item que pode ser expandido com o dialog, se ele aperta ele é expandido
     (área de alimento) - botar 3 tabs, cardápio, carrinho, retirar
