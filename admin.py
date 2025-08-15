@@ -114,6 +114,8 @@ def pagina_crud_eventos():
 
         nome = st.text_input("Nome")
         
+        horario = 123132###ARRUMAR PRA COLOCAR O INPUT DE HORÁRIO   
+        
         col1, col2 = st.columns(2)
         with col1:
             data = st.date_input("Data")
@@ -135,12 +137,41 @@ def pagina_crud_eventos():
         col3, col4, col5 = st.columns(3)
         with col4:
             if st.button("Adicionar Evento", type="primary"):
-                salvarEventoBD(nome, data, local, descricao, qntd_ingresso, valor_ingresso)
+                salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, imagem, local, valor_ingresso)
 
 
-def salvarEventoBD(nome, data, local, descricao, ingressos):
-    pass
+def salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, imagem, local, valor_ingresso):
+    conexao = sqlite3.connect('dados.db')
+    cursor = conexao.cursor()
+    
+    cursor.execute('''
+        INSERT INTO Eventos (Nome, Horario, Data, Qnt_Ingressos, Descricao, Imagem, Local)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (nome, horario, data, qntd_ingresso, descricao, imagem, local))
+    
+    evento_id = cursor.lastrowid
+    
+    conexao.commit()
+    
+    st.success("Evento adicionado com sucesso!")
+    st.session_state.eventos.append({
+        "id": evento_id,
+        "nome": nome,
+        "horario": horario,
+        "data": data,
+        "qntd_ingresso": qntd_ingresso,
+        "descricao": descricao,
+        "imagem": imagem,
+        "local": local
+    })
 
+    for i in range(qntd_ingresso):
+        cursor.execute('''
+            INSERT INTO Ingressos (Evento_ID, Valor)
+            VALUES (?, ?)
+        ''', (evento_id, valor_ingresso))
+        
+        conexao.commit()
 
 def pagina_estatisticas_evento():
     st.header("Estatísticas do Evento")
