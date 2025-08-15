@@ -97,6 +97,8 @@ def pagina_crud_eventos():
                 imagem = st.text_input("Imagem", value=evento["imagem"])
                 descricao = st.text_area("Descrição", value=evento["descricao"])
 
+                ###ATUALIZAR COM AS INFORMAÇÕES DO BD, QUAL INFORMAÇÃO QUER Q MUDE
+
                 if st.button("Salvar alterações", type="primary"):
                     salvar_edicao(evento["id"], nome, data, local, imagem, descricao)
 
