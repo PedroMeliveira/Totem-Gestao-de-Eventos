@@ -257,11 +257,10 @@ def pagina_cadastrar():
 
     col1, col2, col3= st.columns(3)
     with col1:
-        def erroCadastro(nome, cpf, email, data_nascimento, senha):
+        def erroCadastro(nome, cpf, email, senha):
             if len(nome) == 0 or len(cpf) == 0 or len(email) == 0 or len(senha) == 0:
-                st.error("Alguns campos ficaram sem informações, preencha-as para realizar o cadastro")
-                return
-            st.error("Insira todas as informações corretamente")
+                return "Preencha todos os campos"
+            return "Algumas informações estão inválidas"
             
         if resultado_email and resultado_senha:
             st.button(
@@ -273,11 +272,10 @@ def pagina_cadastrar():
                 key="cadastroInfoValidas"
             )
         else:
-            st.button("Cadastro", use_container_width=True, type="primary",
-                on_click=erroCadastro,
-                args=(nome, cpf, email, data_nascimento, senha),
-                key="cadastroInfoInvalidas"
-            )
+            if st.button("Cadastro", use_container_width=True, type="primary", key="cadastroInfoInvalidas"):
+                mensagem = erroCadastro(nome, cpf, email, senha)
+                if mensagem != "":
+                    st.error(mensagem)
     
     with col3:
         st.button(
@@ -291,7 +289,7 @@ def validaEmail(email):
     email_valido = bool(re.match(padrao, email))
 
     if not email_valido:
-        st.error("Insira um email válido, como nome@email.com")
+        st.error("Insira um email válido. Exemplo: nome@email.com")
         return False
     return True
 
@@ -327,6 +325,7 @@ def validaSenha(senha):
 
     
 ### ver se vai usar o cpf
+### tá dando erro
 def realizaCadastro(nome, cpf, email, data_nascimento, senha):
     query = "SELECT Email FROM Clientes WHERE Email = %s"
     cursor.execute(query, (email,))
