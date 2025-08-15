@@ -236,26 +236,48 @@ def pagina_cadastrar():
     st.title("Cadastro")
     st.divider()
     
+    resultado_email = False
+    resultado_senha = False
+    
     nome = st.text_input("Insira seu nome")
 
     # só deixar entrar número
     cpf = st.text_input("Insira seu CPF")
 
     email = st.text_input("Insira seu email")
+    if len(email) != 0:
+        resultado_email = validaEmail(email)
+        
 
     data_nascimento = st.date_input("Insira sua data de nascimento")
 
     senha = st.text_input("Insira sua senha", type="password")
+    if len(senha) != 0:
+        resultado_senha = validaSenha(senha)
 
     col1, col2, col3= st.columns(3)
     with col1:
-        st.button(
-            "Cadastro",
-            use_container_width=True,
-            type="primary",
-            on_click=realizaCadastro,
-            args=(nome, cpf, email, data_nascimento, senha)
-        )
+        def erroCadastro(nome, cpf, email, data_nascimento, senha):
+            if len(nome) == 0 or len(cpf) == 0 or len(email) == 0 or len(senha) == 0:
+                st.error("Alguns campos ficaram sem informações, preencha-as para realizar o cadastro")
+                return
+            st.error("Insira todas as informações corretamente")
+            
+        if resultado_email and resultado_senha:
+            st.button(
+                "Cadastro",
+                use_container_width=True,
+                type="primary",
+                on_click=realizaCadastro,
+                args=(nome, cpf, email, data_nascimento, senha),
+                key="cadastroInfoValidas"
+            )
+        else:
+            st.button("Cadastro", use_container_width=True, type="primary",
+                on_click=erroCadastro,
+                args=(nome, cpf, email, data_nascimento, senha),
+                key="cadastroInfoInvalidas"
+            )
     
     with col3:
         st.button(
@@ -264,6 +286,47 @@ def pagina_cadastrar():
         )
 
 
+def validaEmail(email):
+    padrao = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    email_valido = bool(re.match(padrao, email))
+
+    if not email_valido:
+        st.error("Insira um email válido, como nome@email.com")
+        return False
+    return True
+
+
+def validaSenha(senha):
+    senha_valida = True
+    mensagem = ""
+
+    if len(senha) < 8:
+        mensagem += "A senha deve ter 8 ou mais dígitos\n"
+        senha_valida = False
+
+    if not re.search(r'[A-Z]', senha):
+        mensagem += "\nA senha precisa ter ao menos uma letra maiúscula\n"
+        senha_valida = False
+
+    if not re.search(r'[a-z]', senha):
+        mensagem += "\nA senha precisa ter ao menos uma letra minúscula\n"
+        senha_valida = False
+
+    if not re.search(r'\d', senha):
+        mensagem += "\nA senha precisa ter ao menos um dígito\n"
+        senha_valida = False
+
+    if not re.search(r'[\W_]', senha):
+        mensagem += "\nA senha precisa ter ao menos um carácter especial\n"
+        senha_valida = False
+    
+    if senha_valida:
+        return True
+    st.error(mensagem)
+    return False
+
+    
+### ver se vai usar o cpf
 def realizaCadastro(nome, cpf, email, data_nascimento, senha):
     query = "SELECT Email FROM Clientes WHERE Email = %s"
     cursor.execute(query, (email,))
@@ -286,41 +349,6 @@ def realizaCadastro(nome, cpf, email, data_nascimento, senha):
         st.session_state.cliente_id = cliente_id
         ir_para_login()
     
-    
-    #### email
-    
-    # else:
-    #     padrao = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    #     email_valido = bool(re.match(padrao, email))
-
-    #     if not email_valido:
-    #         #AVISAR QUE EMAIL FOI ESCRITO ERRADO
-    #         pass
-
-
-    ### senha
-    senha_valida = True
-
-    if len(senha) < 8:
-        #AVISAR QUE DEVE TER NO MINIMO 8 CARACTER
-        senha_valida = False
-
-    if not re.search(r'[A-Z]', senha):
-        #AVISAR QUE PRECISA TER UMA LETRA MAISCULA
-        senha_valida = False
-
-    if not re.search(r'[a-z]', senha):
-        #AVISAR QUE PRECISA TER UMA LETRA MINUSCULA
-        senha_valida = False
-
-    if not re.search(r'\d', senha):
-        #AVISAR QUE PRECISA TER UM DIGITO
-        senha_valida = False
-
-    if not re.search(r'[\W_]', senha):
-        #AVISAR QUE PRECISA DE CARACTER ESPECIAL
-        senha_valida = False
-        
 
 if "role" not in st.session_state:
     st.session_state.role = None
