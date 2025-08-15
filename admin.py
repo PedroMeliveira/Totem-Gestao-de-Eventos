@@ -10,21 +10,34 @@ cursor = conexao.cursor()
 def pagina_crud_eventos():
     tab1, tab2 = st.tabs(["Editar/Remover Evento", "Adicionar Evento"])
     with tab1:
-        if "eventos" not in st.session_state:
-            st.session_state.eventos = [
-                {
-                    "id": i,
-                    "nome": f"Evento {i+1}",
-                    "horario": "XX:XX",
-                    "data": f"{10+i}/08/2025",
-                    "local": f"Local {chr(65 + i)}",
-                    "descricao": "Descrição do evento",
-                    "imagem": "https://user-images.githubusercontent.com/20684618/31289519-9ebdbe1a-aae6-11e7-8f82-bf794fdd9d1a.png",
-                    "qntd_ingresos_disponiveis": 0,
-                    "preco_ingressos": 0.1
-                }
-                for i in range(6)
-            ]
+        st.session_state.eventos = []
+        conexao = sqlite3.connect('dados.db')
+        cursor = conexao.cursor()   
+        
+        cursor.execute("SELECT ID, Nome, Horario, Data, Descricao, Imagem, Local FROM Eventos")
+        eventos_bd = cursor.fetchall()
+        
+        for evento in eventos_bd:
+            cursor.execute("SELECT ID, Cliente_ID, Valor FROM Ingressos WHERE Evento_ID = ?", (evento[0],))
+            qntd_ingresso_disponiveis = 0
+            ingressos_bd = cursor.fetchall()
+            for ingresso in ingressos_bd:
+                if ingresso[1] is None:
+                    qntd_ingresso_disponiveis += 1
+            
+            evento_dict = {
+                "id": evento[0],
+                "nome": evento[1],
+                "horario": evento[2],
+                "data": evento[3],
+                "descricao": evento[4],
+                "imagem": evento[5],
+                "local": evento[6],
+                "qntd_ingresos_disponiveis": qntd_ingresso_disponiveis,
+                "preco_ingressos": ingressos_bd[0][2]
+            }
+            
+            st.session_state.eventos.append(evento_dict)
 
         if "evento_editar_id" not in st.session_state:
             st.session_state.evento_editar_id = None
@@ -150,14 +163,22 @@ def salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, imagem, local,
     cursor = conexao.cursor()
     
     cursor.execute('''
-        INSERT INTO Eventos (Nome, Horario, Data, Qnt_Ingressos, Descricao, Imagem, Local)
+        INSERT INTO Eventos (Nome, Horario, Data, Descricao, Imagem, Local)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', (nome, horario, data, qntd_ingresso, descricao, imagem, local))
+    ''', (nome, horario, data, descricao, imagem, local))
     
     evento_id = cursor.lastrowid
     
     conexao.commit()
     
+    for i in range(qntd_ingresso):
+        cursor.execute('''
+            INSERT INTO Ingressos (Evento_ID, Valor)
+            VALUES (?, ?)
+        ''', (evento_id, valor_ingresso))
+        
+        conexao.commit()
+        
     st.success("Evento adicionado com sucesso!")
     st.session_state.eventos.append({
         "id": evento_id,
@@ -170,13 +191,6 @@ def salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, imagem, local,
         "local": local
     })
 
-    for i in range(qntd_ingresso):
-        cursor.execute('''
-            INSERT INTO Ingressos (Evento_ID, Valor)
-            VALUES (?, ?)
-        ''', (evento_id, valor_ingresso))
-        
-        conexao.commit()
 
 def pagina_estatisticas_evento():
     st.header("Estatísticas do Evento")
