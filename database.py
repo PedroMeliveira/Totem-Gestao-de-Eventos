@@ -31,7 +31,6 @@ cursor.execute('''
         Nome TEXT NOT NULL,
         Horario TEXT NOT NULL,
         Data TEXT NOT NULL,
-        Qnt_Ingressos INTEGER NOT NULL,
         Descricao TEXT NOT NULL,
         Imagem TEXT NOT NULL,
         Local TEXT NOT NULL
