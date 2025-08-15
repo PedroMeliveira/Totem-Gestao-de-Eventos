@@ -114,6 +114,8 @@ def pagina_crud_eventos():
 
         nome = st.text_input("Nome")
         
+        horario = 123132###ARRUMAR PRA COLOCAR O INPUT DE HORÁRIO   
+        
         col1, col2 = st.columns(2)
         with col1:
             data = st.date_input("Data")
@@ -135,12 +137,41 @@ def pagina_crud_eventos():
         col3, col4, col5 = st.columns(3)
         with col4:
             if st.button("Adicionar Evento", type="primary"):
-                salvarEventoBD(nome, data, local, descricao, qntd_ingresso, valor_ingresso)
+                salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, imagem, local, valor_ingresso)
 
 
-def salvarEventoBD(nome, data, local, descricao, ingressos):
-    pass
+def salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, imagem, local, valor_ingresso):
+    conexao = sqlite3.connect('dados.db')
+    cursor = conexao.cursor()
+    
+    cursor.execute('''
+        INSERT INTO Eventos (Nome, Horario, Data, Qnt_Ingressos, Descricao, Imagem, Local)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (nome, horario, data, qntd_ingresso, descricao, imagem, local))
+    
+    evento_id = cursor.lastrowid
+    
+    conexao.commit()
+    
+    st.success("Evento adicionado com sucesso!")
+    st.session_state.eventos.append({
+        "id": evento_id,
+        "nome": nome,
+        "horario": horario,
+        "data": data,
+        "qntd_ingresso": qntd_ingresso,
+        "descricao": descricao,
+        "imagem": imagem,
+        "local": local
+    })
 
+    for i in range(qntd_ingresso):
+        cursor.execute('''
+            INSERT INTO Ingressos (Evento_ID, Valor)
+            VALUES (?, ?)
+        ''', (evento_id, valor_ingresso))
+        
+        conexao.commit()
 
 def pagina_estatisticas_evento():
     st.header("Estatísticas do Evento")
@@ -174,15 +205,13 @@ def pagina_login():
 
 
 def checaLogin(email, senha):
-    ### ARRUMAR PARA TABELA DE ADMINS
-    query = "SELECT Nome, Senha FROM Clientes WHERE Email = %s"
-    cursor.execute(query, (email,))
+    cursor.execute("SELECT Nome, Senha FROM Admins WHERE Email = ?", (email,))
 
     user_data = cursor.fetchone()
 
     if user_data is not None:
         nome, senha_bd = user_data
-        senha_bytes = senha.encode('uft-8')
+        senha_bytes = senha.encode('utf-8')
         if bcrypt.checkpw(senha_bytes, senha_bd):
             st.session_state.nome_admin = nome
             st.session_state.role = "admin"
@@ -225,8 +254,7 @@ def pagina_cadastrar():
         
 
 def realizaCadastro(nome, cpf, email, data_nascimento, senha):
-    query = "SELECT Email FROM Clientes WHERE Email = %s"
-    cursor.execute(query, (email,))
+    cursor.execute("SELECT Nome FROM Admins WHERE Email = ?" (email,))
 
     resultado = cursor.fetchone() 
 
@@ -235,15 +263,15 @@ def realizaCadastro(nome, cpf, email, data_nascimento, senha):
         pass
 
     else:
-        senha_bytes = bcrypt.senha.encode('utf-8')
+        senha_bytes = senha.encode('utf-8')
         sal = bcrypt.gensalt()
         senha_hash = bcrypt.hashpw(senha_bytes, sal)
 
-        cursor.execute("INSERT INTO Clientes (Nome, Data_Nasc, Email, Senha) VALUES (?, ?, ?, ?)" (nome, data_nascimento, email, senha_hash))
+        cursor.execute("INSERT INTO Admins (Nome, Data_Nasc, Email, Senha) VALUES (?, ?, ?, ?)" (nome, data_nascimento, email, senha_hash))
         conexao.commit()
 
-        cliente_id = cursor.lastrowid()
-        st.session_state.cliente_id = cliente_id
+        admin_id = cursor.lastrowid()
+        st.session_state.admin_id = admin_id
         ir_para_dashboard()
 
 

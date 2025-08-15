@@ -15,6 +15,17 @@ cursor.execute('''
 ''')
 
 cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Admins (
+        ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        Nome TEXT NOT NULL,
+        CPF TEXT NOT NULL,
+        Data_Nasc TEXT NOT NULL,
+        Email TEXT NOT NULL,
+        Senha BLOB NOT NULL
+        )
+''')
+
+cursor.execute('''
     CREATE TABLE IF NOT EXISTS Eventos (
         ID INTEGER PRIMARY KEY AUTOINCREMENT,
         Nome TEXT NOT NULL,
