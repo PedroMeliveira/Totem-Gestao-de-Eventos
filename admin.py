@@ -205,7 +205,52 @@ def salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, imagem, local,
 
 
 def pagina_estatisticas_evento():
-    st.header("Estatísticas do Evento")
+    st.header("📊 Estatísticas")
+
+    tab1, tab2 = st.tabs(["🍔 Alimentos", "🎟️ Ingressos"])
+
+    conexao = sqlite3.connect("dados.db")
+    cursor = conexao.cursor()
+
+    with tab1:
+        st.subheader("Lanches mais vendidos")
+
+        cursor.execute("""
+            SELECT A.Nome, COUNT(AC.ID) AS Quantidade, SUM(A.Preco) AS Receita
+            FROM Alimento_no_Carrinho AC
+            JOIN Alimentos A ON AC.Alimento_ID = A.ID
+            GROUP BY A.Nome
+            ORDER BY Quantidade DESC
+        """)
+        resultados = cursor.fetchall()
+
+        if resultados:
+            for nome, quantidade, receita in resultados:
+                st.markdown(f"**{nome}** - Vendidos: {quantidade} | Receita: R$ {receita:.2f}")
+        else:
+            st.info("Nenhum alimento vendido até agora.")
+
+    with tab2:
+        st.subheader("Ingressos por evento")
+
+        # não tem outro jeito de conseguir os ingresso vendidos?
+        cursor.execute("""
+            SELECT E.Nome, COUNT(I.ID) AS Vendidos, SUM(I.Valor) AS Receita
+            FROM Ingressos I
+            JOIN Eventos E ON I.Evento_ID = E.ID
+            WHERE I.Cliente_ID IS NOT NULL
+            GROUP BY E.Nome
+            ORDER BY Vendidos DESC
+        """)
+        resultados = cursor.fetchall()
+
+        if resultados:
+            for nome, vendidos, receita in resultados:
+                st.markdown(f"**{nome}** - Vendidos: {vendidos} | Receita: R$ {receita:.2f}")
+        else:
+            st.info("Nenhum ingresso vendido até agora.")
+
+    conexao.close()
 
 
 def pagina_crud_alimentos():
@@ -460,7 +505,81 @@ def pagina_crud_alimentos():
     
 
 def pagina_gerenciar_admins():
-    st.header("Configurar admins")
+    st.header("👤 Gerenciar Administradores")
+    tab1, tab2 = st.tabs(["✏️ Editar/Remover", "➕ Adicionar"])
+
+    conexao = sqlite3.connect("dados.db")
+    cursor = conexao.cursor()
+
+    with tab1:
+        st.subheader("Administradores Cadastrados")
+
+        cursor.execute("SELECT ID, Nome, Email, Senha FROM Admins")
+        admins = cursor.fetchall()
+
+        if not admins:
+            st.info("Nenhum administrador cadastrado.")
+        else:
+            for admin in admins:
+                admin_id, nome_atual, email_atual, senha_atual = admin
+
+                with st.expander(f"{nome_atual} ({email_atual})"):
+                    novo_nome = st.text_input("Nome", value=nome_atual, key=f"nome_{admin_id}")
+                    novo_email = st.text_input("Email", value=email_atual, key=f"email_{admin_id}")
+                    nova_senha = st.text_input("Senha (deixe em branco para não alterar)", type="password", key=f"senha_{admin_id}")
+
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("Salvar Alterações", key=f"salvar_{admin_id}"):
+                            if nova_senha.strip():
+                                senha_bytes = nova_senha.encode('utf-8')
+                                sal = bcrypt.gensalt()
+                                senha_hash = bcrypt.hashpw(senha_bytes, sal)
+                                cursor.execute("UPDATE Admins SET Nome=?, Email=?, Senha=? WHERE ID=?",
+                                               (novo_nome, novo_email, senha_hash, admin_id))
+                            else:
+                                cursor.execute("UPDATE Admins SET Nome=?, Email=? WHERE ID=?",
+                                               (novo_nome, novo_email, admin_id))
+                            conexao.commit()
+                            st.success("Administrador atualizado com sucesso!")
+                            st.rerun()
+
+                    with col2:
+                        if st.button("Remover", key=f"remover_{admin_id}"):
+                            cursor.execute("DELETE FROM Admins WHERE ID=?", (admin_id,))
+                            conexao.commit()
+                            st.warning("Administrador removido com sucesso!")
+                            st.rerun()
+
+    with tab2:
+        st.subheader("Adicionar Novo Administrador")
+
+        with st.form("form_add_admin"):
+            nome = st.text_input("Nome", key="novo_admin_nome")
+            email = st.text_input("Email", key="novo_admin_email")
+            senha = st.text_input("Senha", type="password", key="novo_admin_senha")
+            submit = st.form_submit_button("Adicionar")
+
+            if submit:
+                if not nome or not email or not senha:
+                    st.error("Preencha todos os campos.")
+                else:
+                    # Verifica se já existe
+                    cursor.execute("SELECT ID FROM Admins WHERE Email=?", (email,))
+                    if cursor.fetchone():
+                        st.error("Já existe um administrador com esse email.")
+                    else:
+                        senha_bytes = senha.encode('utf-8')
+                        sal = bcrypt.gensalt()
+                        senha_hash = bcrypt.hashpw(senha_bytes, sal)
+
+                        cursor.execute("INSERT INTO Admins (Nome, Email, Senha) VALUES (?, ?, ?)",
+                                       (nome, email, senha_hash))
+                        conexao.commit()
+                        st.success("Administrador adicionado com sucesso!")
+                        st.rerun()
+
+    conexao.close()
 
 
 def pagina_login():
@@ -483,24 +602,29 @@ def pagina_login():
 
 
 def checaLogin(email, senha):
-    cursor.execute("SELECT Nome, Senha FROM Admins WHERE Email = ?", (email,))
+    conexao = sqlite3.connect("dados.db")
+    cursor = conexao.cursor()
 
-    user_data = cursor.fetchone()
+    query = "SELECT ID, Nome, Senha FROM Admins WHERE Email = ?"
+    cursor.execute(query, (email,))
+    admin_data = cursor.fetchone()
 
-    if user_data is not None:
-        nome, senha_bd = user_data
-        senha_bytes = senha.encode('utf-8')
+    if not email or not senha:
+        st.error("Por favor, preencha todos os campos.")
+        return
+
+    if admin_data is not None:
+        admin_id, nome, senha_bd = admin_data
+        senha_bytes = senha.encode("utf-8")
+
         if bcrypt.checkpw(senha_bytes, senha_bd):
+            st.session_state.admin_id = admin_id
             st.session_state.nome_admin = nome
-            st.session_state.role = "admin"
-            pass
-        
+            st.session_state.auth_admin = "autenticado"
         else:
             st.error("Senha inválida, tente novamente.")
-            pass
     else:
-        st.error("Esse email não está cadastrado em nossos sistemas.")
-        pass
+        st.error("Esse email não está cadastrado como administrador.")
 
 
 def pagina_cadastrar():
@@ -554,23 +678,18 @@ def realizaCadastro(nome, cpf, email, data_nascimento, senha):
 
 
 def ir_para_dashboard():
-    st.session_state.auth_user = "login"
+    st.session_state.auth_admin = "login"
         
         
-if "role" not in st.session_state:
-    st.session_state.role = None
-if "auth_user" not in st.session_state:
-    st.session_state.auth_user = "login"
+
+if "auth_admin" not in st.session_state:
+    st.session_state.auth_admin = "login"
 
 
-if st.session_state.role is None:
-    if st.session_state.auth_user == "login":
-        pagina_login()
-    elif st.session_state.auth_user == "cadastrar":
-        pagina_cadastrar()
+if st.session_state.auth_admin == "login":
+    pagina_login()
 
-
-elif st.session_state.role == "admin":
+elif st.session_state.auth_admin == "autenticado":
     nav = st.navigation([
         st.Page(pagina_crud_eventos, title="CRUD Eventos", icon="📋"),
         st.Page(pagina_estatisticas_evento, title="Estatísticas do Evento", icon="📊"),
