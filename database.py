@@ -55,8 +55,9 @@ cursor.execute('''
         Preco FLOAT NOT NULL,
         Categoria TEXT NOT NULL,
         Imagem TEXT NOT NULL,
-        Descricao TEXT NOT NULL
-        )
+        Descricao TEXT NOT NULL,
+        Quantidade INTEGER NOT NULL DEFAULT 1
+    )
 ''')
 
 cursor.execute('''
