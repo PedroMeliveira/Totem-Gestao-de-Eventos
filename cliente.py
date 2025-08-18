@@ -327,8 +327,10 @@ def validaSenha(senha):
 ### ver se vai usar o cpf
 ### tá dando erro
 def realizaCadastro(nome, cpf, email, data_nascimento, senha):
-    query = "SELECT Email FROM Clientes WHERE Email = %s"
-    cursor.execute(query, (email,))
+    conexao = sqlite3.connect('dados.db')
+    cursor = conexao.cursor()
+    
+    cursor.execute("SELECT Email FROM Clientes WHERE Email = ?", (email,))
 
     resultado = cursor.fetchone() 
 
@@ -337,14 +339,14 @@ def realizaCadastro(nome, cpf, email, data_nascimento, senha):
         pass
 
     else:
-        senha_bytes = bcrypt.senha.encode('utf-8')
+        senha_bytes = senha.encode('utf-8')
         sal = bcrypt.gensalt()
         senha_hash = bcrypt.hashpw(senha_bytes, sal)
 
-        cursor.execute("INSERT INTO Clientes (Nome, Data_Nasc, Email, Senha) VALUES (?, ?, ?, ?)" (nome, data_nascimento, email, senha_hash))
+        cursor.execute("INSERT INTO Clientes (Nome, CPF, Data_Nasc, Email, Senha) VALUES (?, ?, ?, ?, ?)", (nome, cpf, data_nascimento, email, senha_hash))
         conexao.commit()
 
-        cliente_id = cursor.lastrowid()
+        cliente_id = cursor.lastrowid
         st.session_state.cliente_id = cliente_id
         ir_para_login()
     
