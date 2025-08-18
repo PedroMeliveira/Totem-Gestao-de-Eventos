@@ -1,7 +1,7 @@
-import streamlit as st
-import sqlite3
-import bcrypt
 import re
+import bcrypt
+import sqlite3
+import streamlit as st
 
 
 conexao = sqlite3.connect('dados.db')
@@ -207,29 +207,33 @@ def pagina_login():
 
 
 def checaLogin(email, senha):
-    query = "SELECT Nome, Senha FROM Clientes WHERE Email = %s"
+    conexao = sqlite3.connect("dados.db")
+    cursor = conexao.cursor()
+    
+    query = "SELECT Nome, Senha FROM Clientes WHERE Email = ?"
     cursor.execute(query, (email,))
 
     user_data = cursor.fetchone()
 
     if user_data is not None:
         nome, senha_bd = user_data
-        senha_bytes = senha.encode('uft-8')
+        senha_bytes = senha.encode('utf-8')
         if bcrypt.checkpw(senha_bytes, senha_bd):
             st.session_state.nome_cliente = nome
-            st.session_state.role = "cliente"
-            pass
+            st.session_state.auth_user = "autenticado"
+            st.rerun()
         
         else:
             st.error("Senha inválida, tente novamente.")
-            pass
+            
     else:
         st.error("Esse email não está cadastrado em nossos sistemas.")
-        pass
+        
 
 
 def ir_para_login():
     st.session_state.auth_user = "login"
+    st.rerun()
 
 
 def pagina_cadastrar():
@@ -351,20 +355,17 @@ def realizaCadastro(nome, cpf, email, data_nascimento, senha):
         ir_para_login()
     
 
-if "role" not in st.session_state:
-    st.session_state.role = None
 if "auth_user" not in st.session_state:
     st.session_state.auth_user = "login"
 
 
-if st.session_state.role is None:
-    if st.session_state.auth_user == "login":
-        pagina_login()
-    elif st.session_state.auth_user == "cadastrar":
-        pagina_cadastrar()
-
-
-elif st.session_state.role == "cliente":
+if st.session_state.auth_user == "login":
+    pagina_login()
+    
+elif st.session_state.auth_user == "cadastrar":
+    pagina_cadastrar()
+    
+elif st.session_state.auth_user == "autenticado":
     nav = st.navigation([
         st.Page(pagina_meus_ingressos, title="Meus Ingressos", icon="🎟️"),
         st.Page(pagina_area_alimentos, title="Área de Alimentos", icon="🍔"),
