@@ -6,11 +6,11 @@ import os
 def salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, imagem, local, valor_ingresso):
     conexao = sqlite3.connect('dados.db')
     cursor = conexao.cursor()
-
+    #gerar codigo para numero aleatorio para colocar no nome da imagem
     cursor.execute('''
         INSERT INTO Eventos (Nome, Horario, Data, Descricao, Imagem, Local)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', (nome, horario, data, descricao, imagem, local))
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (nome, horario, data, descricao, int(imagem), local))
 
     evento_id = cursor.lastrowid
 
@@ -80,8 +80,8 @@ with tab1:
     if "evento_remover_id" not in st.session_state:
         st.session_state.evento_remover_id = None
 
-    def salvar_edicao(evento_id, nome, horario, data, descricao, imagem, local, qntd_ingresso, preco_ingresso):
-        # MODIFICAR NO BANCO DE DADOS (COLOCAR OS INGRESSOS NO BD)
+    def salvar_edicao(evento_id, nome, horario, data, descricao, imagem, local, qntd_ingresso, valor_ingresso):
+        
         for e in st.session_state.eventos:
             if e["id"] == evento_id:
                 e["nome"] = nome
@@ -91,7 +91,7 @@ with tab1:
                 e["imagem"] = imagem
                 e["local"] = local
                 e["qntd_ingresso"] = qntd_ingresso
-                e["preco_ingresso"] = preco_ingresso
+                e["valor_ingresso"] = valor_ingresso
                 break
             
         conexao = sqlite3.connect("dados.db")
@@ -102,6 +102,14 @@ with tab1:
             WHERE ID=?
         """, (nome, horario, data, descricao, imagem, local))
         
+        cursor.execute("""
+            UPDATE Ingressos
+            SET Valor=?
+            WHERE Evento_ID=?", 
+        """, (valor_ingresso, evento_id))
+        
+        if imagem and imagem != "temp":
+            cursor.execute("UPDATE Eventos SET Imagem=? WHERE ID=?", (imagem, evento_id))
         conexao.commit()
         conexao.close()
             
@@ -260,7 +268,7 @@ with tab2:
     col3, col4, col5 = st.columns(3)
     with col4:
         if st.button("Adicionar Evento", type="primary", use_container_width=True):
-            if not nome or not horario or  not local or not descricao:
+            if not nome or not horario or  not local or not descricao or not uploaded_file:
                 st.warning("Por favor, preencha todos os campos.")
                 
             else:
