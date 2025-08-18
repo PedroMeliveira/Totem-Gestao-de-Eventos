@@ -47,6 +47,15 @@ def pagina_crud_eventos():
             st.session_state.evento_remover_id = None
 
         def salvar_edicao(evento_id, nome, data, local, descricao):
+            conexao = sqlite3.connect('dados.db')
+            cursor = conexao.cursor()
+            
+            cursor.execute("UPDATE Eventos SET Nome=?, Data=?, Local=?, Descricao=? WHERE ID=?",
+                        (nome, data, local, descricao, evento_id))
+            
+            conexao.commit()
+            conexao.close()
+            
             # MODIFICAR NO BANCO DE DADOS
             for e in st.session_state.eventos:
                 if e["id"] == evento_id:
