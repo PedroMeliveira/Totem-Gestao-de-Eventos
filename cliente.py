@@ -2,6 +2,7 @@ import re
 import bcrypt
 import sqlite3
 import streamlit as st
+from datetime import date
 
 
 conexao = sqlite3.connect('dados.db')
@@ -245,16 +246,18 @@ def pagina_cadastrar():
     
     nome = st.text_input("Insira seu nome")
 
-    # só deixar entrar número
-    cpf = st.text_input("Insira seu CPF")
+    col1, col2 = st.columns(2)
+    with col1:
+        # só deixar entrar número
+        cpf = st.text_input("Insira seu CPF", )
 
+    with col2:
+        data_nascimento = st.date_input("Insira sua data de nascimento", format='DD/MM/YYYY', min_value=date(1945, 12, 31))
+        
     email = st.text_input("Insira seu email")
     if len(email) != 0:
         resultado_email = validaEmail(email)
         
-
-    data_nascimento = st.date_input("Insira sua data de nascimento")
-
     senha = st.text_input("Insira sua senha", type="password")
     if len(senha) != 0:
         resultado_senha = validaSenha(senha)
@@ -284,7 +287,8 @@ def pagina_cadastrar():
     with col3:
         st.button(
             "Voltar ao Login",
-            on_click=ir_para_login
+            on_click=ir_para_login,
+            use_container_width=True
         )
 
 
@@ -327,9 +331,7 @@ def validaSenha(senha):
     st.error(mensagem)
     return False
 
-    
-### ver se vai usar o cpf
-### tá dando erro
+
 def realizaCadastro(nome, cpf, email, data_nascimento, senha):
     conexao = sqlite3.connect('dados.db')
     cursor = conexao.cursor()
