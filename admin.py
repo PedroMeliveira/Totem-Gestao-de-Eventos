@@ -357,10 +357,10 @@ def pagina_crud_alimentos():
                 nome = st.text_input("Nome", value=alimento["nome"])
                 preco = st.number_input("Preço", value=float(alimento["preco"]), step=0.5)
                 qntd = st.number_input("Quantidade", value=int(alimento["qntd"]), step=1)
-                descricao = st.text_area("Descrição", value=alimento["descricao"])
                 categoria = st.selectbox("Categoria", 
                                         ["Bebida", "Entrada", "Combos", "Principais"],
                                         index=["Bebida", "Entrada", "Combos", "Principais"].index(alimento.get("categoria", "Bebida")))
+                descricao = st.text_area("Descrição", value=alimento["descricao"])
 
                 st.write("Imagem atual:")
                 if alimento.get("imagem") and os.path.exists(alimento["imagem"]):
@@ -441,7 +441,7 @@ def pagina_crud_alimentos():
         with col4:
             if st.button("Adicionar", type="primary", use_container_width=True):
                 if not nome or preco is None or qntd is None or not categoria or not descricao:
-                    st.warning("Por favor, preencha todos os campos obrigatórios.")
+                    st.warning("Por favor, preencha todos os campos.")
                     
                 else:
                     salvarAlimentoBD(nome, preco, descricao, uploaded_file, categoria, qntd)

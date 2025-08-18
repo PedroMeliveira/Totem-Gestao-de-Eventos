@@ -137,25 +137,29 @@ with tab1:
     eventos = st.session_state.eventos
     cols = st.columns(3)
 
-    for i, evento in enumerate(eventos):
-        with cols[i % 3]:
-            st.image(evento["imagem"], use_container_width=True)
-            st.markdown(f"**{evento['nome']}**")
-            st.caption(f"{evento['data']} - {evento['local']}")
-
-            with st.popover("Ver mais detalhes"):
+    if not eventos:
+        st.title("Não há nenhum evento adicionado :(")
+    
+    else:
+        for i, evento in enumerate(eventos):
+            with cols[i % 3]:
                 st.image(evento["imagem"], use_container_width=True)
-                st.write(f"**Data:** {evento['data']}")
-                st.write(f"**Local:** {evento['local']}")
-                st.write(evento["descricao"])
+                st.markdown(f"**{evento['nome']}**")
+                st.caption(f"{evento['data']} - {evento['local']}")
 
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("✏️ Editar", key=f"editar_{evento['id']}"):
-                        st.session_state.evento_editar_id = evento["id"]
-                with col2:
-                    if st.button("🗑️ Remover", key=f"remover_{evento['id']}"):
-                        st.session_state.evento_remover_id = evento["id"]
+                with st.popover("Ver mais detalhes"):
+                    st.image(evento["imagem"], use_container_width=True)
+                    st.write(f"**Data:** {evento['data']}")
+                    st.write(f"**Local:** {evento['local']}")
+                    st.write(evento["descricao"])
+
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("✏️ Editar", key=f"editar_{evento['id']}"):
+                            st.session_state.evento_editar_id = evento["id"]
+                    with col2:
+                        if st.button("🗑️ Remover", key=f"remover_{evento['id']}"):
+                            st.session_state.evento_remover_id = evento["id"]
 
     # Diálogo de edição
     if st.session_state.evento_editar_id is not None:
@@ -169,14 +173,30 @@ with tab1:
             imagem = st.text_input("Imagem", value=evento["imagem"])
             descricao = st.text_area("Descrição", value=evento["descricao"])
 
-            ###ATUALIZAR COM AS INFORMAÇÕES DO BD, QUAL INFORMAÇÃO QUER Q MUDE
+            st.write("Imagem atual:")
+            if evento.get("imagem") and os.path.exists(evento["imagem"]):
+                st.image(evento["imagem"], width=250)
 
+            uploaded_file = st.file_uploader("Alterar imagem", 
+                                            type=["jpg", "jpeg", "png"],
+                                            key=f"edit_img_{evento['id']}")
+            imagem_path = evento["imagem"]
+            
+            if uploaded_file:
+                os.makedirs("imagens/eventos", exist_ok=True)
+                imagem_path = os.path.join("imagens/eventos", uploaded_file.name)
+                
+                with open(imagem_path, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                    
+                st.image(imagem_path, caption="Nova imagem", width=250)
+                    
             if st.button("Salvar alterações", type="primary"):
                 salvar_edicao(evento["id"], nome, data, local, imagem, descricao)
 
         editar()
 
-    # Dialog de confirmação de remoção
+    # Dialog de confirmar remoção
     if st.session_state.evento_remover_id is not None:
         evento = next(e for e in st.session_state.eventos if e["id"] == st.session_state.evento_remover_id)
 
@@ -185,7 +205,10 @@ with tab1:
             st.warning("Tem certeza que deseja remover este evento?")
             st.write(f"**Evento:** {evento['nome']}")
             st.write(f"**Data:** {evento['data']}")
+            st.write(f"**Horário:** {evento['horario']}")
             st.write(f"**Local:** {evento['local']}")
+            st.write(f"**Descrição: {evento['descricao']}")
+            st.image(evento["imagem"], width=250)
 
             col1, col2 = st.columns(2)
             with col1:
@@ -201,20 +224,30 @@ with tab1:
 
 with tab2:
     st.header("Adicionar Evento")
-
-    nome = st.text_input("Nome")
     
-    horario = 123132###ARRUMAR PRA COLOCAR O INPUT DE HORÁRIO   
+    if "chave" not in st.session_state:
+        st.session_state.chave = 0
+
+    nome = st.text_input("Nome", key=f"nome_{st.session_state.chave}")
+
+    local = st.text_input("Local")
     
     col1, col2 = st.columns(2)
     with col1:
         data = st.date_input("Data")
-        local = st.text_input("Local")
+        uploaded_file = st.file_uploader("Upload da imagem", 
+                                        type=["jpg", "jpeg", "png"], 
+                                        key=f"file_{st.session_state.chave}")
+        
         
     with col2:
-        imagem = st.text_input("Imagem")
+        horario = st.text_input("Horário")
+        if uploaded_file:
+            st.image(uploaded_file, caption="Pré-visualização", width=300)
     
-        with st.popover("Ingressos"):
+    col1, col2, col3 = st.columns(3)
+    with col2:
+        with st.popover("Ingressos", use_container_width=True):
             col1, col2 = st.columns(2)
             with col1:
                 qntd_ingresso = st.text_input("Qntd de ingressos")
@@ -227,4 +260,11 @@ with tab2:
     col3, col4, col5 = st.columns(3)
     with col4:
         if st.button("Adicionar Evento", type="primary", use_container_width=True):
-            salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, imagem, local, valor_ingresso)
+            if not nome or not horario or  not local or not descricao:
+                st.warning("Por favor, preencha todos os campos.")
+                
+            else:
+                salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, uploaded_file, local, valor_ingresso)
+                st.session_state.eventos = carregar_eventos()
+                st.session_state.chave += 1
+                st.rerun()
