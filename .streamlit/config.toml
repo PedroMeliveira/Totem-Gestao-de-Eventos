@@ -8,5 +8,4 @@ font = "monospace"
 [theme.sidebar]
 backgroundColor = "#494957ff"
 textColor = "#cacae4ff"
-menuBackgroundColor = "#444444"
 font = "monospace"

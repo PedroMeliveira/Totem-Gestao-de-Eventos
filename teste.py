@@ -276,12 +276,11 @@ with tab1:
         st.success("Alterações salvas com sucesso!")
         st.session_state.edit_success = False
     
-    st.markdown("---")
-    st.subheader("Filtrar Alimentos")
-    
     categorias_unicas = sorted(list(set(item['categoria'] for item in st.session_state.alimentos)))
     todas_categorias = ["Todas as Categorias"] + categorias_unicas
-    filtro_categoria = st.selectbox("Filtrar por Categoria", todas_categorias)
+    
+    st.subheader("Filtrar por Categoria")
+    filtro_categoria = st.selectbox("", todas_categorias)
     
     st.markdown("---")
 
@@ -294,7 +293,6 @@ with tab1:
         st.info("Nenhum alimento encontrado com os filtros aplicados.")
 
     def salvar_edicao(alimento_id, nome, preco, qntd, imagem, descricao, categoria):
-        """Salva as edições de um alimento no banco de dados."""
         for e in st.session_state.alimentos:
             if e["id"] == alimento_id:
                 e["nome"] = nome
@@ -320,7 +318,6 @@ with tab1:
         st.rerun()
 
     def remover_alimento(alimento_id):
-        """Remove um alimento do banco de dados e o arquivo de imagem associado."""
         conexao = sqlite3.connect("dados.db")
         cursor = conexao.cursor()
         
@@ -378,21 +375,26 @@ with tab1:
             preco = st.number_input("Preço", value=float(alimento["preco"]), step=0.5)
             qntd = st.number_input("Quantidade", value=int(alimento["qntd"]), step=1)
             descricao = st.text_area("Descrição", value=alimento["descricao"])
-            categoria = st.selectbox("Categoria", ["Bebida", "Entrada", "Combos", "Principais"],
-                                     index=["Bebida", "Entrada", "Combos", "Principais"].index(alimento.get("categoria", "Bebida")))
+            categoria = st.selectbox("Categoria", 
+                                    ["Bebida", "Entrada", "Combos", "Principais"],
+                                    index=["Bebida", "Entrada", "Combos", "Principais"].index(alimento.get("categoria", "Bebida")))
 
             st.write("Imagem atual:")
             if alimento.get("imagem") and os.path.exists(alimento["imagem"]):
                 st.image(alimento["imagem"], width=250)
 
-            uploaded_file = st.file_uploader("Alterar imagem", type=["jpg", "jpeg", "png"],
-                                             key=f"edit_img_{alimento['id']}")
+            uploaded_file = st.file_uploader("Alterar imagem", 
+                                            type=["jpg", "jpeg", "png"],
+                                            key=f"edit_img_{alimento['id']}")
             imagem_path = alimento["imagem"]
+            
             if uploaded_file:
                 os.makedirs("imagens/alimentos", exist_ok=True)
                 imagem_path = os.path.join("imagens/alimentos", uploaded_file.name)
+                
                 with open(imagem_path, "wb") as f:
                     f.write(uploaded_file.getbuffer())
+                    
                 st.image(imagem_path, caption="Nova imagem", width=250)
 
             if st.button("Salvar alterações", type="primary"):
@@ -418,6 +420,7 @@ with tab1:
                 if st.button("❌ Cancelar"):
                     st.session_state.alimento_remover_id = None
                     st.rerun()
+                    
             with col2:
                 if st.button("🗑️ Confirmar", type="primary"):
                     remover_alimento(alimento["id"])
@@ -434,11 +437,15 @@ with tab2:
     nome = st.text_input("Nome", key=f"nome_{st.session_state.chave}")
     preco = st.number_input("Preço", min_value=0.0, step=0.5, key=f"preco_{st.session_state.chave}")
     qntd = st.number_input("Quantidade", min_value=1, step=1, key=f"qntd_{st.session_state.chave}")
-    categoria = st.selectbox("Categoria", ["Bebida", "Entrada", "Combos", "Principais"], key=f"categoria_{st.session_state.chave}")
+    categoria = st.selectbox("Categoria", 
+                            ["Bebida", "Entrada", "Combos", "Principais"], 
+                            key=f"categoria_{st.session_state.chave}")
 
     col1, col2 = st.columns(2)
     with col1:
-        uploaded_file = st.file_uploader("Upload da imagem", type=["jpg", "jpeg", "png"], key=f"file_{st.session_state.chave}")
+        uploaded_file = st.file_uploader("Upload da imagem", 
+                                        type=["jpg", "jpeg", "png"], 
+                                        key=f"file_{st.session_state.chave}")
 
     with col2:
         if uploaded_file:
@@ -447,10 +454,12 @@ with tab2:
     descricao = st.text_area("Descrição", key=f"desc_{st.session_state.chave}")
 
     col3, col4, col5 = st.columns(3)
+    
     with col4:
         if st.button("Adicionar", type="primary", use_container_width=True):
             if not nome or preco is None or qntd is None or not categoria or not descricao:
                 st.warning("Por favor, preencha todos os campos obrigatórios.")
+                
             else:
                 salvarAlimentoBD(nome, preco, descricao, uploaded_file, categoria, qntd)
                 st.session_state.alimentos = carregar_alimentos()
