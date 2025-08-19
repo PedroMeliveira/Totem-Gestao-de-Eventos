@@ -50,16 +50,22 @@ def pagina_area_alimentos():
     conexao = sqlite3.connect("dados.db")
     cursor = conexao.cursor()
     cursor.execute("SELECT Nome, Preco, Categoria, Imagem, Descricao, Quantidade FROM Alimentos")
-    rows = cursor.fetchall()
+    linhas = cursor.fetchall()
 
-    # !!!
-    cardapio = [
-        {"nome": r[0], "preco": r[1], "categoria": r[2], "img": r[3], "descricao": r[4], "quantidade": r[5]}
-        for r in rows
-    ]
+    cardapio = []
+
+    for l in linhas:
+        item = {
+            "nome": l[0],
+            "preco": l[1],
+            "categoria": l[2],
+            "img": l[3],
+            "descricao": l[4],
+            "quantidade": l[5]
+        }
+        cardapio.append(item)
 
     with tab1:
-        # !!!
         categorias = ["Todos"] + sorted(set(item["categoria"] for item in cardapio))
         if "carrinho" not in st.session_state:
             st.session_state.carrinho = {item["nome"]: 0 for item in cardapio}
@@ -88,13 +94,7 @@ def pagina_area_alimentos():
             for item in itens:
                 col1, col2, col3 = st.columns([3, 1, 1])
                 with col1:
-                    # !!!
-                    st.markdown(f"""
-                    <div style="background-color:#262730; padding:15px; border-radius:10px;">
-                        <strong>{item['Alimento']}</strong><br>
-                        Quantidade: {item['Quantidade']}
-                    </div>
-                    """, unsafe_allow_html=True)
+                    st.write(f"**{item['Alimento']}** - Quantidade: {item['Quantidade']}")
                 with col2:
                     if st.button("+", key=f"mais_{item['Alimento']}"):
                         st.session_state.carrinho[item['Alimento']] += 1
@@ -117,12 +117,19 @@ def pagina_central_eventos():
 
     with tab1:
         cursor.execute("SELECT Nome, Data, Local, Descricao, Imagem FROM Eventos")
-        rows = cursor.fetchall()
-        # !!!
-        eventos = [
-            {"nome": r[0], "data": r[1], "local": r[2], "descricao": r[3], "imagem": r[4]}
-            for r in rows
-        ]
+        linhas = cursor.fetchall()
+
+        eventos = []
+
+        for l in linhas:
+            evento = {
+                "nome": l[0],
+                "data": l[1],
+                "local": l[2],
+                "descricao": l[3],
+                "imagem": l[4]
+            }
+            eventos.append(evento)
 
         def criar_dialogo(evento):
             @st.dialog(evento["nome"])

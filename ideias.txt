@@ -1,18 +1,11 @@
-painel de cliente e de admin:
-    - colocar seções (Exemplo: Comida, Eventos) numa sidebar e "subtemas" disso em tabs
-    - colocar botão de sair das sessões
+falta fazer:
+- carrinho cliente alimentos e ingressos
+- arrumar telas de cadastrar/login (melhorar elas e ver se tem como deixar digitar só o cpf)
+- colocar um resumo do perfil do cliente/admin e um botão pra deslogar na sidebar
+- pegar o estilo da tela de adicionar admins e replicar em outras telas
+- estatísticas evento
+- fazer crud de alimentos e de eventos adicionar a imagem com um código aleatório como nome
 
-# https://www.youtube.com/watch?v=lrhT3fGU4aE
-
-# tratar dados numéricos
-
-painel de cliente:
-    - buscar eventos por filtros -> data, faixa de preço, localização
-
-    (meus ingressos) - fazer cada ingresso ser um item que pode ser expandido com o dialog, se ele aperta ele é expandido
-    (área de alimento) - botar 3 tabs, cardápio, carrinho, retirar
-                    ^- no cardápio, botar os alimentos, cada alimento ser um popover, que quando clicado, vai aparecer um botão para adicionar no carrinho
-                    ^- no retirar, cada vez que ele comprar algo, gerar um código que a pessoa pode retirar, na tela, ter um popover para cada compra
-    (central de eventos) - botar 2 tabs, eventos, carrinho
-                    ^- nos eventos, colocar uma versão resumida do evento num botão e quando clica, abre um dialog que mostra mais informações e coloca ingressos num carrinho
-                    ^- no carrinho mostra ingressos que ele está comprando, depois que comprar vai para os meus ingressos
+bugs:
+- quando não tem nenhum evento no bd, dá um erro quando tenta entrar nos eventos
+- alguns botões precisam de um duplo clique pra fazer a ação
