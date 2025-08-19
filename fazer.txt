@@ -1,7 +1,7 @@
 falta fazer:
 - carrinho cliente alimentos e ingressos
 - arrumar telas de cadastrar/login (melhorar elas e ver se tem como deixar digitar só o cpf)
-- pegar o estilo da tela de adicionar admins e replicar em outras telas
+- nas telas de login, cadastrar e adicionar, usar o widget form, que nem quando vai adicionar admin
 - estatísticas evento
 - fazer crud de alimentos e de eventos adicionar a imagem com um código aleatório como nome
 
