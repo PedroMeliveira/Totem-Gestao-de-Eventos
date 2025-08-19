@@ -4,41 +4,15 @@ import sqlite3
 import streamlit as st
 
 
-conexao = sqlite3.connect('dados.db')
-cursor = conexao.cursor()
-
-
+# CRUD EVENTOS
 def pagina_crud_eventos():
-    tab1, tab2 = st.tabs(["Editar/Remover Evento", "Adicionar Evento"])
+    sidebar_perfil_admin()
+    st.header("📋 CRUD Eventos")
+    tab1, tab2 = st.tabs(["✏️ Editar/Remover", "➕ Adicionar"])
+
     with tab1:
-        st.session_state.eventos = []
-        conexao = sqlite3.connect('dados.db')
-        cursor = conexao.cursor()   
-        
-        cursor.execute("SELECT ID, Nome, Horario, Data, Descricao, Imagem, Local FROM Eventos")
-        eventos_bd = cursor.fetchall()
-        
-        for evento in eventos_bd:
-            cursor.execute("SELECT ID, Cliente_ID, Valor FROM Ingressos WHERE Evento_ID = ?", (evento[0],))
-            qntd_ingresso_disponiveis = 0
-            ingressos_bd = cursor.fetchall()
-            for ingresso in ingressos_bd:
-                if ingresso[1] is None:
-                    qntd_ingresso_disponiveis += 1
-            
-            evento_dict = {
-                "id": evento[0],
-                "nome": evento[1],
-                "horario": evento[2],
-                "data": evento[3],
-                "descricao": evento[4],
-                "imagem": evento[5],
-                "local": evento[6],
-                "qntd_ingresos_disponiveis": qntd_ingresso_disponiveis,
-                "preco_ingressos": ingressos_bd[0][2]
-            }
-            
-            st.session_state.eventos.append(evento_dict)
+        if "eventos" not in st.session_state:
+            st.session_state.eventos = carregar_eventos()
 
         if "evento_editar_id" not in st.session_state:
             st.session_state.evento_editar_id = None
@@ -46,56 +20,33 @@ def pagina_crud_eventos():
         if "evento_remover_id" not in st.session_state:
             st.session_state.evento_remover_id = None
 
-        def salvar_edicao(evento_id, nome, data, local, descricao):
-            conexao = sqlite3.connect('dados.db')
-            cursor = conexao.cursor()
-            
-            cursor.execute("UPDATE Eventos SET Nome=?, Data=?, Local=?, Descricao=? WHERE ID=?",
-                        (nome, data, local, descricao, evento_id))
-            
-            conexao.commit()
-            conexao.close()
-            
-            # MODIFICAR NO BANCO DE DADOS
-            for e in st.session_state.eventos:
-                if e["id"] == evento_id:
-                    e["nome"] = nome
-                    e["data"] = data
-                    e["local"] = local
-                    e["descricao"] = descricao
-                    break
-            st.session_state.evento_editar_id = None
-            st.rerun()
-
-        def remover_evento(evento_id):
-            # REMOVER NO BANCO DE DADOS
-            st.session_state.eventos = [e for e in st.session_state.eventos if e["id"] != evento_id]
-            st.session_state.evento_remover_id = None
-            st.rerun()
-
         st.write("### Eventos disponíveis")
         eventos = st.session_state.eventos
         cols = st.columns(3)
 
-        for i, evento in enumerate(eventos):
-            with cols[i % 3]:
-                st.image(evento["imagem"], use_container_width=True)
-                st.markdown(f"**{evento['nome']}**")
-                st.caption(f"{evento['data']} - {evento['local']}")
-
-                with st.popover("Ver mais detalhes"):
+        if not eventos:
+            st.info("Não há nenhum evento cadastrado.")
+        
+        else:
+            for i, evento in enumerate(eventos):
+                with cols[i % 3]:
                     st.image(evento["imagem"], use_container_width=True)
-                    st.write(f"**Data:** {evento['data']}")
-                    st.write(f"**Local:** {evento['local']}")
-                    st.write(evento["descricao"])
+                    st.markdown(f"**{evento['nome']}**")
+                    st.caption(f"{evento['data']} - {evento['local']}")
 
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        if st.button("✏️ Editar", key=f"editar_{evento['id']}"):
-                            st.session_state.evento_editar_id = evento["id"]
-                    with col2:
-                        if st.button("🗑️ Remover", key=f"remover_{evento['id']}"):
-                            st.session_state.evento_remover_id = evento["id"]
+                    with st.popover("Ver mais detalhes"):
+                        st.image(evento["imagem"], use_container_width=True)
+                        st.write(f"**Data:** {evento['data']}")
+                        st.write(f"**Local:** {evento['local']}")
+                        st.write(evento["descricao"])
+
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            if st.button("✏️ Editar", key=f"editar_{evento['id']}"):
+                                st.session_state.evento_editar_id = evento["id"]
+                        with col2:
+                            if st.button("🗑️ Remover", key=f"remover_{evento['id']}"):
+                                st.session_state.evento_remover_id = evento["id"]
 
         # Diálogo de edição
         if st.session_state.evento_editar_id is not None:
@@ -109,14 +60,30 @@ def pagina_crud_eventos():
                 imagem = st.text_input("Imagem", value=evento["imagem"])
                 descricao = st.text_area("Descrição", value=evento["descricao"])
 
-                ###ATUALIZAR COM AS INFORMAÇÕES DO BD, QUAL INFORMAÇÃO QUER Q MUDE
+                st.write("Imagem atual:")
+                if evento.get("imagem") and os.path.exists(evento["imagem"]):
+                    st.image(evento["imagem"], width=250)
 
+                uploaded_file = st.file_uploader("Alterar imagem", 
+                                                type=["jpg", "jpeg", "png"],
+                                                key=f"edit_img_{evento['id']}")
+                imagem_path = evento["imagem"]
+                
+                if uploaded_file:
+                    os.makedirs("imagens/eventos", exist_ok=True)
+                    imagem_path = os.path.join("imagens/eventos", uploaded_file.name)
+                    
+                    with open(imagem_path, "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+                        
+                    st.image(imagem_path, caption="Nova imagem", width=250)
+                        
                 if st.button("Salvar alterações", type="primary"):
                     salvar_edicao(evento["id"], nome, data, local, imagem, descricao)
 
             editar()
 
-        # Dialog de confirmação de remoção
+        # Dialog de confirmar remoção
         if st.session_state.evento_remover_id is not None:
             evento = next(e for e in st.session_state.eventos if e["id"] == st.session_state.evento_remover_id)
 
@@ -125,7 +92,10 @@ def pagina_crud_eventos():
                 st.warning("Tem certeza que deseja remover este evento?")
                 st.write(f"**Evento:** {evento['nome']}")
                 st.write(f"**Data:** {evento['data']}")
+                st.write(f"**Horário:** {evento['horario']}")
                 st.write(f"**Local:** {evento['local']}")
+                st.write(f"**Descrição: {evento['descricao']}")
+                st.image(evento["imagem"], width=250)
 
                 col1, col2 = st.columns(2)
                 with col1:
@@ -138,23 +108,30 @@ def pagina_crud_eventos():
 
             confirmar_remocao()
 
-
+    ################## USAR FORM
     with tab2:
-        st.header("Adicionar Evento")
+        if "chave" not in st.session_state:
+            st.session_state.chave = 0
 
-        nome = st.text_input("Nome")
-        
-        horario = 123132###ARRUMAR PRA COLOCAR O INPUT DE HORÁRIO   
+        nome = st.text_input("Nome", key=f"nome_{st.session_state.chave}")
+
+        local = st.text_input("Local")
         
         col1, col2 = st.columns(2)
         with col1:
             data = st.date_input("Data")
-            local = st.text_input("Local")
+            uploaded_file = st.file_uploader("Upload da imagem", 
+                                            type=["jpg", "jpeg", "png"], 
+                                            key=f"file_{st.session_state.chave}")
             
         with col2:
-            imagem = st.text_input("Imagem")
+            horario = st.text_input("Horário")
+            if uploaded_file:
+                st.image(uploaded_file, caption="Pré-visualização", width=300)
         
-            with st.popover("Ingressos"):
+        col1, col2, col3 = st.columns(3)
+        with col2:
+            with st.popover("Ingressos", use_container_width=True):
                 col1, col2 = st.columns(2)
                 with col1:
                     qntd_ingresso = st.text_input("Qntd de ingressos")
@@ -167,22 +144,120 @@ def pagina_crud_eventos():
         col3, col4, col5 = st.columns(3)
         with col4:
             if st.button("Adicionar Evento", type="primary", use_container_width=True):
-                salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, imagem, local, valor_ingresso)
+                if not nome or not horario or  not local or not descricao or not uploaded_file:
+                    st.warning("Por favor, preencha todos os campos.")
+                    
+                else:
+                    salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, uploaded_file, local, valor_ingresso)
+                    st.session_state.eventos = carregar_eventos()
+                    st.session_state.chave += 1
+                    st.rerun()
 
+# Funções auxiliares
+def salvar_edicao(evento_id, nome, horario, data, descricao, imagem, local, qntd_ingresso, valor_ingresso):
+    
+    for e in st.session_state.eventos:
+        if e["id"] == evento_id:
+            e["nome"] = nome
+            e["horario"] = horario
+            e["data"] = data
+            e["descricao"] = descricao
+            e["imagem"] = imagem
+            e["local"] = local
+            e["qntd_ingresso"] = qntd_ingresso
+            e["valor_ingresso"] = valor_ingresso
+            break
+        
+    conexao = sqlite3.connect("dados.db")
+    cursor = conexao.cursor()
+    cursor.execute("""
+        UPDATE Eventos
+        SET Nome=?, Horario=?, Data=?, Descricao=?, Imagem=?, Local=?
+        WHERE ID=?
+    """, (nome, horario, data, descricao, imagem, local))
+    
+    cursor.execute("""
+        UPDATE Ingressos
+        SET Valor=?
+        WHERE Evento_ID=?", 
+    """, (valor_ingresso, evento_id))
+    
+    if imagem and imagem != "temp":
+        cursor.execute("UPDATE Eventos SET Imagem=? WHERE ID=?", (imagem, evento_id))
+    conexao.commit()
+    conexao.close()
+        
+    st.session_state.evento_editar_id = None
+    st.rerun()
+
+def remover_evento(evento_id):
+    conexao = sqlite3.connect("dados.db")
+    cursor = conexao.cursor()
+    
+    cursor.execute("SELECT Imagem FROM Eventos WHERE ID=?", (evento_id,))
+    resultado = cursor.fetchone()
+    
+    imagem_path = None
+    if resultado and resultado[0]:
+        imagem_path
+        
+    cursor.execute("DELETE FROM Eventos WHERE ID=?", (evento_id,))
+    conexao.commit()
+    conexao.close()
+    
+    if imagem_path and os.path.exists(imagem_path) and imagem_path != "temp":
+        try:
+            os.remove(imagem_path)
+        except OSError as e:
+            st.error(f"Erro ao tentar excluir {imagem_path}")
+            
+    st.session_state.eventos = [e for e in st.session_state.eventos if e["id"] != evento_id]
+    st.session_state.evento_remover_id = None
+    st.rerun()
+
+def carregar_eventos():
+    conexao = sqlite3.connect('dados.db')
+    cursor = conexao.cursor()   
+    
+    cursor.execute("SELECT ID, Nome, Horario, Data, Descricao, Imagem, Local FROM Eventos")
+    eventos_bd = cursor.fetchall()
+    
+    eventos = []
+    for evento in eventos_bd:
+        cursor.execute("SELECT ID, Cliente_ID, Valor FROM Ingressos WHERE Evento_ID = ?", (evento[0],))
+        qntd_ingresso_disponiveis = 0
+        ingressos_bd = cursor.fetchall()
+        for ingresso in ingressos_bd:
+            if ingresso[1] is None:
+                qntd_ingresso_disponiveis += 1
+        
+        eventos.append({
+            "id": evento[0],
+            "nome": evento[1],
+            "horario": evento[2],
+            "data": evento[3],
+            "descricao": evento[4],
+            "imagem": evento[5],
+            "local": evento[6],
+            "qntd_ingresos_disponiveis": qntd_ingresso_disponiveis,
+            "preco_ingressos": ingressos_bd[0][2]
+        })
+        
+        return eventos
 
 def salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, imagem, local, valor_ingresso):
     conexao = sqlite3.connect('dados.db')
     cursor = conexao.cursor()
-    
+    #gerar codigo para numero aleatorio para colocar no nome da imagem
     cursor.execute('''
         INSERT INTO Eventos (Nome, Horario, Data, Descricao, Imagem, Local)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', (nome, horario, data, descricao, imagem, local))
-    
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (nome, horario, data, descricao, int(imagem), local))
+
     evento_id = cursor.lastrowid
-    
+
     conexao.commit()
-    
+
     for i in range(qntd_ingresso):
         cursor.execute('''
             INSERT INTO Ingressos (Evento_ID, Valor)
@@ -203,8 +278,9 @@ def salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, imagem, local,
         "local": local
     })
 
-
+# ESTATÍSTICAS
 def pagina_estatisticas_evento():
+    sidebar_perfil_admin()
     st.header("📊 Estatísticas")
 
     tab1, tab2 = st.tabs(["🍔 Alimentos", "🎟️ Ingressos"])
@@ -253,56 +329,11 @@ def pagina_estatisticas_evento():
     conexao.close()
 
 
+# CRUD ALIMENTOS
 def pagina_crud_alimentos():
-    def salvarAlimentoBD(nome, preco, descricao, imagem, categoria, qntd):
-        conexao = sqlite3.connect("dados.db")
-        cursor = conexao.cursor()
-        
-        cursor.execute('''
-            INSERT INTO Alimentos (Nome, Preco, Descricao, Categoria, Imagem, Quantidade)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (nome, preco, descricao, categoria, "temp", qntd))
-        
-        alimento_id = cursor.lastrowid
-
-        if imagem:
-            ext = os.path.splitext(imagem.name)[1]
-            imagem_path = os.path.join("imagens/alimentos", f"alimento_{alimento_id}{ext}")
-            
-            with open(imagem_path, "wb") as f:
-                f.write(imagem.getbuffer())
-            
-            cursor.execute("UPDATE Alimentos SET Imagem=? WHERE ID=?", (imagem_path, alimento_id))
-
-        conexao.commit()
-        conexao.close()
-
-
-    def carregar_alimentos():
-        conexao = sqlite3.connect("dados.db")
-        cursor = conexao.cursor()
-        
-        cursor.execute("SELECT ID, Nome, Preco, Descricao, Categoria, Imagem, Quantidade FROM Alimentos")
-        dados = cursor.fetchall()
-        conexao.close()
-
-        alimentos = []
-        for linha in dados:
-            alimentos.append({
-                "id": linha[0],
-                "nome": linha[1],
-                "preco": linha[2],
-                "descricao": linha[3],
-                "categoria": linha[4],
-                "imagem": linha[5],
-                "qntd": linha[6]
-            })
-            
-        return alimentos
-
-
-    tab1, tab2 = st.tabs(["Editar/Remover Itens", "Adicionar Item"])
-
+    sidebar_perfil_admin()
+    st.header("🍽️ CRUD Alimentos")
+    tab1, tab2 = st.tabs(["✏️ Editar/Remover", "➕ Adicionar"])
 
     with tab1:
         if "alimentos" not in st.session_state:
@@ -330,60 +361,12 @@ def pagina_crud_alimentos():
         if not alimentos_filtrados:
             st.info("Nenhum alimento encontrado com os filtros aplicados.")
 
-        def salvar_edicao(alimento_id, nome, preco, qntd, imagem, descricao, categoria):
-            for e in st.session_state.alimentos:
-                if e["id"] == alimento_id:
-                    e["nome"] = nome
-                    e["preco"] = preco
-                    e["qntd"] = qntd
-                    e["imagem"] = imagem
-                    e["descricao"] = descricao
-                    e["categoria"] = categoria
-                    break
-
-            conexao = sqlite3.connect("dados.db")
-            cursor = conexao.cursor()
-            cursor.execute("""
-                UPDATE Alimentos
-                SET Nome=?, Preco=?, Descricao=?, Imagem=?, Categoria=?
-                WHERE ID=?
-            """, (nome, preco, descricao, imagem, categoria, alimento_id))
-            conexao.commit()
-            conexao.close()
-
-            st.session_state.alimento_editar_id = None
-            st.rerun()
-
-        def remover_alimento(alimento_id):
-            conexao = sqlite3.connect("dados.db")
-            cursor = conexao.cursor()
-            
-            cursor.execute("SELECT Imagem FROM Alimentos WHERE ID=?", (alimento_id,))
-            resultado = cursor.fetchone()
-            
-            imagem_path = None
-            if resultado and resultado[0]:
-                imagem_path = resultado[0]
-
-            cursor.execute("DELETE FROM Alimentos WHERE ID=?", (alimento_id,))
-            conexao.commit()
-            conexao.close()
-
-            if imagem_path and os.path.exists(imagem_path) and imagem_path != "temp":
-                try:
-                    os.remove(imagem_path)
-                except OSError as e:
-                    st.error(f"Erro ao tentar excluir {imagem_path}")
-
-            st.session_state.alimentos = [e for e in st.session_state.alimentos if e["id"] != alimento_id]
-            st.session_state.alimento_remover_id = None
-            st.rerun()
-
         for item in alimentos_filtrados:
             col1, col2 = st.columns([1, 2])
             with col1:
                 if item.get("imagem") and os.path.exists(item["imagem"]):
                     st.image(item["imagem"], width=250)
+
             with col2:
                 st.markdown(f"### {item['nome']}")
                 st.caption(f"R$ {item['preco']:.2f}")
@@ -464,10 +447,8 @@ def pagina_crud_alimentos():
 
             confirmar_remocao()
 
-
+    ########### USAR FORM
     with tab2:
-        st.header("Adicionar Alimento")
-
         if "chave" not in st.session_state:
             st.session_state.chave = 0
 
@@ -502,9 +483,107 @@ def pagina_crud_alimentos():
                     st.session_state.alimentos = carregar_alimentos()
                     st.session_state.chave += 1
                     st.rerun()
-    
 
+# Funções auxiliares
+def salvarAlimentoBD(nome, preco, descricao, imagem, categoria, qntd):
+    conexao = sqlite3.connect("dados.db")
+    cursor = conexao.cursor()
+    
+    cursor.execute('''
+        INSERT INTO Alimentos (Nome, Preco, Descricao, Categoria, Imagem, Quantidade)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (nome, preco, descricao, categoria, "temp", qntd))
+    
+    alimento_id = cursor.lastrowid
+
+    if imagem:
+        ext = os.path.splitext(imagem.name)[1]
+        imagem_path = os.path.join("imagens/alimentos", f"alimento_{alimento_id}{ext}")
+        
+        with open(imagem_path, "wb") as f:
+            f.write(imagem.getbuffer())
+        
+        cursor.execute("UPDATE Alimentos SET Imagem=? WHERE ID=?", (imagem_path, alimento_id))
+
+    conexao.commit()
+    conexao.close()
+
+
+def carregar_alimentos():
+    conexao = sqlite3.connect("dados.db")
+    cursor = conexao.cursor()
+    
+    cursor.execute("SELECT ID, Nome, Preco, Descricao, Categoria, Imagem, Quantidade FROM Alimentos")
+    dados = cursor.fetchall()
+    conexao.close()
+
+    alimentos = []
+    for linha in dados:
+        alimentos.append({
+            "id": linha[0],
+            "nome": linha[1],
+            "preco": linha[2],
+            "descricao": linha[3],
+            "categoria": linha[4],
+            "imagem": linha[5],
+            "qntd": linha[6]
+        })
+        
+    return alimentos
+
+def salvar_edicao(alimento_id, nome, preco, qntd, imagem, descricao, categoria):
+    for e in st.session_state.alimentos:
+        if e["id"] == alimento_id:
+            e["nome"] = nome
+            e["preco"] = preco
+            e["qntd"] = qntd
+            e["imagem"] = imagem
+            e["descricao"] = descricao
+            e["categoria"] = categoria
+            break
+
+    conexao = sqlite3.connect("dados.db")
+    cursor = conexao.cursor()
+    cursor.execute("""
+        UPDATE Alimentos
+        SET Nome=?, Preco=?, Descricao=?, Imagem=?, Categoria=?
+        WHERE ID=?
+    """, (nome, preco, descricao, imagem, categoria, alimento_id))
+    conexao.commit()
+    conexao.close()
+
+    st.session_state.alimento_editar_id = None
+    st.rerun()
+
+def remover_alimento(alimento_id):
+    conexao = sqlite3.connect("dados.db")
+    cursor = conexao.cursor()
+    
+    cursor.execute("SELECT Imagem FROM Alimentos WHERE ID=?", (alimento_id,))
+    resultado = cursor.fetchone()
+    
+    imagem_path = None
+    if resultado and resultado[0]:
+        imagem_path = resultado[0]
+
+    cursor.execute("DELETE FROM Alimentos WHERE ID=?", (alimento_id,))
+    conexao.commit()
+    conexao.close()
+
+    if imagem_path and os.path.exists(imagem_path) and imagem_path != "temp":
+        try:
+            os.remove(imagem_path)
+        except OSError as e:
+            st.error(f"Erro ao tentar excluir {imagem_path}")
+
+    st.session_state.alimentos = [e for e in st.session_state.alimentos if e["id"] != alimento_id]
+    st.session_state.alimento_remover_id = None
+    st.rerun()
+
+
+# GERENCIAR ADMINISTRADORES
 def pagina_gerenciar_admins():
+    sidebar_perfil_admin()
     st.header("👤 Gerenciar Administradores")
     tab1, tab2 = st.tabs(["✏️ Editar/Remover", "➕ Adicionar"])
 
@@ -517,43 +596,38 @@ def pagina_gerenciar_admins():
         cursor.execute("SELECT ID, Nome, Email, Senha FROM Admins")
         admins = cursor.fetchall()
 
-        if not admins:
-            st.info("Nenhum administrador cadastrado.")
-        else:
-            for admin in admins:
-                admin_id, nome_atual, email_atual, senha_atual = admin
+        for admin in admins:
+            admin_id, nome_atual, email_atual, senha_atual = admin
 
-                with st.expander(f"{nome_atual} ({email_atual})"):
-                    novo_nome = st.text_input("Nome", value=nome_atual, key=f"nome_{admin_id}")
-                    novo_email = st.text_input("Email", value=email_atual, key=f"email_{admin_id}")
-                    nova_senha = st.text_input("Senha (deixe em branco para não alterar)", type="password", key=f"senha_{admin_id}")
+            with st.expander(f"{nome_atual} ({email_atual})"):
+                novo_nome = st.text_input("Nome", value=nome_atual, key=f"nome_{admin_id}")
+                novo_email = st.text_input("Email", value=email_atual, key=f"email_{admin_id}")
+                nova_senha = st.text_input("Senha (deixe em branco para não alterar)", type="password", key=f"senha_{admin_id}")
 
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        if st.button("Salvar Alterações", key=f"salvar_{admin_id}"):
-                            if nova_senha.strip():
-                                senha_bytes = nova_senha.encode('utf-8')
-                                sal = bcrypt.gensalt()
-                                senha_hash = bcrypt.hashpw(senha_bytes, sal)
-                                cursor.execute("UPDATE Admins SET Nome=?, Email=?, Senha=? WHERE ID=?",
-                                               (novo_nome, novo_email, senha_hash, admin_id))
-                            else:
-                                cursor.execute("UPDATE Admins SET Nome=?, Email=? WHERE ID=?",
-                                               (novo_nome, novo_email, admin_id))
-                            conexao.commit()
-                            st.success("Administrador atualizado com sucesso!")
-                            st.rerun()
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("Salvar Alterações", key=f"salvar_{admin_id}"):
+                        if nova_senha.strip():
+                            senha_bytes = nova_senha.encode('utf-8')
+                            sal = bcrypt.gensalt()
+                            senha_hash = bcrypt.hashpw(senha_bytes, sal)
+                            cursor.execute("UPDATE Admins SET Nome=?, Email=?, Senha=? WHERE ID=?",
+                                            (novo_nome, novo_email, senha_hash, admin_id))
+                        else:
+                            cursor.execute("UPDATE Admins SET Nome=?, Email=? WHERE ID=?",
+                                            (novo_nome, novo_email, admin_id))
+                        conexao.commit()
+                        st.success("Administrador atualizado com sucesso!")
+                        st.rerun()
 
-                    with col2:
-                        if st.button("Remover", key=f"remover_{admin_id}"):
-                            cursor.execute("DELETE FROM Admins WHERE ID=?", (admin_id,))
-                            conexao.commit()
-                            st.warning("Administrador removido com sucesso!")
-                            st.rerun()
+                with col2:
+                    if st.button("Remover", key=f"remover_{admin_id}"):
+                        cursor.execute("DELETE FROM Admins WHERE ID=?", (admin_id,))
+                        conexao.commit()
+                        st.warning("Administrador removido com sucesso!")
+                        st.rerun()
 
     with tab2:
-        st.subheader("Adicionar Novo Administrador")
-
         with st.form("form_add_admin"):
             nome = st.text_input("Nome", key="novo_admin_nome")
             email = st.text_input("Email", key="novo_admin_email")
@@ -564,10 +638,10 @@ def pagina_gerenciar_admins():
                 if not nome or not email or not senha:
                     st.error("Preencha todos os campos.")
                 else:
-                    # Verifica se já existe
                     cursor.execute("SELECT ID FROM Admins WHERE Email=?", (email,))
                     if cursor.fetchone():
                         st.error("Já existe um administrador com esse email.")
+
                     else:
                         senha_bytes = senha.encode('utf-8')
                         sal = bcrypt.gensalt()
@@ -582,8 +656,25 @@ def pagina_gerenciar_admins():
     conexao.close()
 
 
+# CADASTRO E LOGIN
+def sidebar_perfil_admin():
+    with st.sidebar:
+        if "admin_id" in st.session_state:
+            st.markdown("#### 🛠️ Administrador")
+            nome = st.session_state.get("nome_admin", "-")
+            email = st.session_state.get("email_admin", "-")
+            st.write(f"**Nome:** {nome}")
+            st.write(f"**Email:** {email}")
+            st.divider()
+            if st.button("Sair", type='primary', use_container_width=True):
+                for k in ["admin_id", "nome_admin", "auth_admin"]:
+                    if k in st.session_state:
+                        del st.session_state[k]
+                st.session_state.auth_admin = "login"
+                st.rerun()
+
 def pagina_login():
-    st.title("Bem-vindo")
+    st.title("Bem-vindo Administrador")
     st.divider()
     st.markdown("### Login")
     email = st.text_input("Email")
@@ -607,19 +698,20 @@ def checaLogin(email, senha):
 
     query = "SELECT ID, Nome, Senha FROM Admins WHERE Email = ?"
     cursor.execute(query, (email,))
-    admin_data = cursor.fetchone()
+    dados = cursor.fetchone()
 
     if not email or not senha:
         st.error("Por favor, preencha todos os campos.")
         return
 
-    if admin_data is not None:
-        admin_id, nome, senha_bd = admin_data
+    if dados is not None:
+        admin_id, nome, senha_bd = dados
         senha_bytes = senha.encode("utf-8")
 
         if bcrypt.checkpw(senha_bytes, senha_bd):
             st.session_state.admin_id = admin_id
             st.session_state.nome_admin = nome
+            st.session_state.email_admin = email
             st.session_state.auth_admin = "autenticado"
         else:
             st.error("Senha inválida, tente novamente.")
@@ -656,6 +748,9 @@ def pagina_cadastrar():
         
 
 def realizaCadastro(nome, cpf, email, data_nascimento, senha):
+    conexao = sqlite3.connect("dados.db")
+    cursor = conexao.cursor()
+    
     cursor.execute("SELECT Nome FROM Admins WHERE Email = ?" (email,))
 
     resultado = cursor.fetchone() 
@@ -680,11 +775,9 @@ def realizaCadastro(nome, cpf, email, data_nascimento, senha):
 def ir_para_dashboard():
     st.session_state.auth_admin = "login"
         
-        
 
 if "auth_admin" not in st.session_state:
     st.session_state.auth_admin = "login"
-
 
 if st.session_state.auth_admin == "login":
     pagina_login()
@@ -692,8 +785,8 @@ if st.session_state.auth_admin == "login":
 elif st.session_state.auth_admin == "autenticado":
     nav = st.navigation([
         st.Page(pagina_crud_eventos, title="CRUD Eventos", icon="📋"),
-        st.Page(pagina_estatisticas_evento, title="Estatísticas do Evento", icon="📊"),
         st.Page(pagina_crud_alimentos, title="CRUD Alimentos", icon="🍽️"),
+        st.Page(pagina_estatisticas_evento, title="Estatísticas", icon="📊"),
         st.Page(pagina_gerenciar_admins, title="Gerenciar Admins", icon="🛠️"),
     ],)
     nav.run()

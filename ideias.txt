@@ -1,11 +1,11 @@
 falta fazer:
 - carrinho cliente alimentos e ingressos
 - arrumar telas de cadastrar/login (melhorar elas e ver se tem como deixar digitar só o cpf)
-- colocar um resumo do perfil do cliente/admin e um botão pra deslogar na sidebar
 - pegar o estilo da tela de adicionar admins e replicar em outras telas
 - estatísticas evento
 - fazer crud de alimentos e de eventos adicionar a imagem com um código aleatório como nome
 
 bugs:
-- quando não tem nenhum evento no bd, dá um erro quando tenta entrar nos eventos
-- alguns botões precisam de um duplo clique pra fazer a ação
+- em algumas funções, tem uns cpfs que não são utilizados
+- quando vai adicionar administrador, falta pegar o cpf dele e checar se o email, cpf e senha são válidos
+- tirar algumas mensagens de sucesso (elas somem mt rápido por conta do st.rerun())
