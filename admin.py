@@ -779,7 +779,7 @@ def realizaCadastro(nome, cpf, email, data_nascimento, senha):
         sal = bcrypt.gensalt()
         senha_hash = bcrypt.hashpw(senha_bytes, sal)
 
-        cursor.execute("INSERT INTO Admins (Nome, Data_Nasc, Email, Senha) VALUES (?, ?, ?, ?)" (nome, data_nascimento, email, senha_hash))
+        cursor.execute("INSERT INTO Admins (Nome, CPF, Data_Nasc, Email, Senha) VALUES (?, ?, ?, ?, ?)" (nome, cpf, data_nascimento, email, senha_hash))
         conexao.commit()
 
         admin_id = cursor.lastrowid()
