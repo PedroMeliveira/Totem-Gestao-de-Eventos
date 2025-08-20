@@ -3,6 +3,7 @@ import uuid
 import bcrypt
 import sqlite3
 import streamlit as st
+from datetime import date, time
 
 
 # CRUD EVENTOS
@@ -56,9 +57,15 @@ def pagina_crud_eventos():
             @st.dialog(f"Editar {evento['nome']}")
             def editar():
                 nome = st.text_input("Nome", value=evento["nome"])
+                
+                ### ARRUMAR
                 data = st.text_input("Data", value=evento["data"])
                 local = st.text_input("Local", value=evento["local"])
+                
+                ### ARRUMAR
                 imagem_path = st.text_input("Imagem", value=evento["imagem"])
+                
+                ### ARRUMAR
                 with st.popover("Ingressos", use_container_width=True):
                     col1, col2 = st.columns(2)
                     with col1:
@@ -87,7 +94,7 @@ def pagina_crud_eventos():
                     st.image(imagem_path, caption="Nova imagem", width=250)
                         
                 if st.button("Salvar alterações", type="primary"):
-                    salvar_edicao(evento["id"], nome, data, local, imagem_path, descricao, horario, int(qntd_ingresso), valor_ingresso, uploaded_file)
+                    salvar_edicao_eventos(evento["id"], nome, data, local, imagem_path, descricao, horario, int(qntd_ingresso), valor_ingresso, uploaded_file)
 
             editar()
 
@@ -123,17 +130,17 @@ def pagina_crud_eventos():
 
         nome = st.text_input("Nome", key=f"nome_{st.session_state.chave}")
 
-        local = st.text_input("Local")
+        local = st.text_input("Local", key=f"local_{st.session_state.chave}")
         
         col1, col2 = st.columns(2)
         with col1:
-            data = st.date_input("Data")
+            data = st.date_input("Data", min_value=date(1930, 12, 31), format='DD/MM/YYYY', key=f"date_{st.session_state.chave}")
             uploaded_file = st.file_uploader("Upload da imagem", 
                                             type=["jpg", "jpeg", "png"], 
                                             key=f"file_{st.session_state.chave}")
             
         with col2:
-            horario = st.text_input("Horário")
+            horario = st.time_input("Horário", value=time(12, 00), key=f"time_{st.session_state.chave}")
             if uploaded_file:
                 st.image(uploaded_file, caption="Pré-visualização", width=300)
         
@@ -142,12 +149,12 @@ def pagina_crud_eventos():
             with st.popover("Ingressos", use_container_width=True):
                 col1, col2 = st.columns(2)
                 with col1:
-                    qntd_ingresso = st.number_input("Qntd de ingressos")
+                    qntd_ingresso = st.number_input("Qntd de ingressos", min_value=1, step=1, key=f"qntd_{st.session_state.chave}")
                 
                 with col2:
-                    valor_ingresso = st.number_input("Valor do ingresso")
+                    valor_ingresso = st.number_input("Valor do ingresso", min_value=0.0, step=0.5, key=f"valor_{st.session_state.chave}")
                 
-        descricao = st.text_area("Descrição")
+        descricao = st.text_area("Descrição", key=f"descricao_{st.session_state.chave}")
 
         col3, col4, col5 = st.columns(3)
         with col4:
@@ -156,22 +163,13 @@ def pagina_crud_eventos():
                     st.warning("Por favor, preencha todos os campos.")
                     
                 else:
-                    salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, uploaded_file, local, valor_ingresso)
+                    salvarEventoBD(nome, str(horario), data, qntd_ingresso, descricao, uploaded_file, local, valor_ingresso)
                     st.session_state.eventos = carregar_eventos()
                     st.session_state.chave += 1
                     st.rerun()
 
 # Funções auxiliares
-def salvar_edicao(evento_id, nome, data, local, imagem_path, descricao, horario, qntd_ingresso, valor_ingresso, uploaded_file):
-    ext = os.path.splitext(uploaded_file.name)[1]
-    nome_aleatorio = f"{uuid.uuid4().hex[:8]}{ext}"
-    imagem_path = os.path.join("imagens", "eventos", nome_aleatorio)
-
-    os.makedirs(os.path.dirname(imagem_path), exist_ok=True)
-
-    with open(imagem_path, "wb") as f:
-        f.write(uploaded_file.getbuffer())
-
+def salvar_edicao_eventos(evento_id, nome, data, local, imagem_path, descricao, horario, qntd_ingresso, valor_ingresso, uploaded_file):
     for e in st.session_state.eventos:
         if e["id"] == evento_id:
             e["nome"] = nome
@@ -216,7 +214,7 @@ def remover_evento(evento_id):
     
     imagem_path = None
     if resultado and resultado[0]:
-        imagem_path
+        imagem_path = resultado[0]
         
     cursor.execute("DELETE FROM Eventos WHERE ID=?", (evento_id,))
     conexao.commit()
@@ -228,7 +226,7 @@ def remover_evento(evento_id):
         except OSError as e:
             st.error(f"Erro ao tentar excluir {imagem_path}")
             
-    st.session_state.eventos = [e for e in st.session_state.eventos if e["id"] != evento_id]
+    st.session_state.eventos = carregar_eventos()
     st.session_state.evento_remover_id = None
     st.rerun()
 
@@ -244,9 +242,12 @@ def carregar_eventos():
         cursor.execute("SELECT ID, Cliente_ID, Valor FROM Ingressos WHERE Evento_ID = ?", (evento[0],))
         ingressos_bd = cursor.fetchall()
         
-        qntd_ingresso_disponiveis = sum(1 for ingresso in ingressos_bd if ingresso[1] is None)
+        qntd_ingresso_disponiveis = 0
+        for ingresso in ingressos_bd:
+            if ingresso[1] is None:
+                qntd_ingresso_disponiveis += 1
         
-        preco = ingressos_bd[0][2] if ingressos_bd else 0  # Preço padrão 0 se não houver ingressos
+        preco = ingressos_bd[0][2] if ingressos_bd else 0
 
         eventos.append({
             "id": evento[0],
@@ -275,7 +276,6 @@ def salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, imagem, local,
     conexao = sqlite3.connect('dados.db')
     cursor = conexao.cursor()
         
-    #gerar codigo para numero aleatorio para colocar no nome da imagem
     cursor.execute('''
         INSERT INTO Eventos (Nome, Horario, Data, Descricao, Imagem, Local)
         VALUES (?, ?, ?, ?, ?, ?)
@@ -293,18 +293,7 @@ def salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, imagem, local,
         
     conexao.commit()
     conexao.close()
-        
-    st.success("Evento adicionado com sucesso!")
-    st.session_state.eventos.append({
-        "id": evento_id,
-        "nome": nome,
-        "horario": horario,
-        "data": data,
-        "qntd_ingresso": qntd_ingresso,
-        "descricao": descricao,
-        "imagem": imagem,
-        "local": local
-    })
+    
 
 # ESTATÍSTICAS
 def pagina_estatisticas_evento():
@@ -446,7 +435,7 @@ def pagina_crud_alimentos():
                     st.image(imagem_path, caption="Nova imagem", width=250)
 
                 if st.button("Salvar alterações", type="primary"):
-                    salvar_edicao(alimento["id"], nome, preco, qntd, imagem_path, descricao, categoria)
+                    salvar_edicao_alimentos(alimento["id"], nome, preco, qntd, imagem_path, descricao, categoria)
 
             editar()
 
@@ -514,24 +503,22 @@ def pagina_crud_alimentos():
 
 # Funções auxiliares
 def salvarAlimentoBD(nome, preco, descricao, imagem, categoria, qntd):
+    ext = os.path.splitext(imagem.name)[1]
+    nome_aleatorio = f"{uuid.uuid4().hex[:8]}{ext}"
+    imagem_path = os.path.join("imagens", "eventos", nome_aleatorio)
+
+    os.makedirs(os.path.dirname(imagem_path), exist_ok=True)
+
+    with open(imagem_path, "wb") as f:
+        f.write(imagem.getbuffer())
+    
     conexao = sqlite3.connect("dados.db")
     cursor = conexao.cursor()
     
     cursor.execute('''
         INSERT INTO Alimentos (Nome, Preco, Descricao, Categoria, Imagem, Quantidade)
         VALUES (?, ?, ?, ?, ?, ?)
-    ''', (nome, preco, descricao, categoria, "temp", qntd))
-    
-    alimento_id = cursor.lastrowid
-
-    if imagem:
-        ext = os.path.splitext(imagem.name)[1]
-        imagem_path = os.path.join("imagens/alimentos", f"alimento_{alimento_id}{ext}")
-        
-        with open(imagem_path, "wb") as f:
-            f.write(imagem.getbuffer())
-        
-        cursor.execute("UPDATE Alimentos SET Imagem=? WHERE ID=?", (imagem_path, alimento_id))
+    ''', (nome, preco, descricao, categoria, imagem_path, qntd))
 
     conexao.commit()
     conexao.close()
@@ -559,7 +546,7 @@ def carregar_alimentos():
         
     return alimentos
 
-def salvar_edicao(alimento_id, nome, preco, qntd, imagem, descricao, categoria):
+def salvar_edicao_alimentos(alimento_id, nome, preco, qntd, imagem, descricao, categoria):
     for e in st.session_state.alimentos:
         if e["id"] == alimento_id:
             e["nome"] = nome
