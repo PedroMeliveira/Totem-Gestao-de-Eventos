@@ -1,4 +1,5 @@
 import os
+import uuid
 import bcrypt
 import sqlite3
 import streamlit as st
@@ -57,7 +58,15 @@ def pagina_crud_eventos():
                 nome = st.text_input("Nome", value=evento["nome"])
                 data = st.text_input("Data", value=evento["data"])
                 local = st.text_input("Local", value=evento["local"])
-                imagem = st.text_input("Imagem", value=evento["imagem"])
+                imagem_path = st.text_input("Imagem", value=evento["imagem"])
+                with st.popover("Ingressos", use_container_width=True):
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        qntd_ingresso = st.number_input("Qntd de ingressos", step=1, format="%d", value=evento["qntd_ingresso"])
+                
+                    with col2:
+                        valor_ingresso = st.number_input("Valor do ingresso", value=evento["valor_ingresso"])
+                        
                 descricao = st.text_area("Descrição", value=evento["descricao"])
 
                 st.write("Imagem atual:")
@@ -70,7 +79,6 @@ def pagina_crud_eventos():
                 imagem_path = evento["imagem"]
                 
                 if uploaded_file:
-                    os.makedirs("imagens/eventos", exist_ok=True)
                     imagem_path = os.path.join("imagens/eventos", uploaded_file.name)
                     
                     with open(imagem_path, "wb") as f:
@@ -79,7 +87,7 @@ def pagina_crud_eventos():
                     st.image(imagem_path, caption="Nova imagem", width=250)
                         
                 if st.button("Salvar alterações", type="primary"):
-                    salvar_edicao(evento["id"], nome, data, local, imagem, descricao)
+                    salvar_edicao(evento["id"], nome, data, local, imagem_path, descricao, horario, int(qntd_ingresso), valor_ingresso, uploaded_file)
 
             editar()
 
@@ -134,17 +142,17 @@ def pagina_crud_eventos():
             with st.popover("Ingressos", use_container_width=True):
                 col1, col2 = st.columns(2)
                 with col1:
-                    qntd_ingresso = st.text_input("Qntd de ingressos")
+                    qntd_ingresso = st.number_input("Qntd de ingressos")
                 
                 with col2:
-                    valor_ingresso = st.text_input("Valor do ingresso")
+                    valor_ingresso = st.number_input("Valor do ingresso")
                 
         descricao = st.text_area("Descrição")
 
         col3, col4, col5 = st.columns(3)
         with col4:
             if st.button("Adicionar Evento", type="primary", use_container_width=True):
-                if not nome or not horario or  not local or not descricao or not uploaded_file:
+                if not nome or not horario or not local or not descricao or not uploaded_file or not qntd_ingresso or not valor_ingresso:
                     st.warning("Por favor, preencha todos os campos.")
                     
                 else:
@@ -154,39 +162,48 @@ def pagina_crud_eventos():
                     st.rerun()
 
 # Funções auxiliares
-def salvar_edicao(evento_id, nome, horario, data, descricao, imagem, local, qntd_ingresso, valor_ingresso):
-    
+def salvar_edicao(evento_id, nome, data, local, imagem_path, descricao, horario, qntd_ingresso, valor_ingresso, uploaded_file):
+    ext = os.path.splitext(uploaded_file.name)[1]
+    nome_aleatorio = f"{uuid.uuid4().hex[:8]}{ext}"
+    imagem_path = os.path.join("imagens", "eventos", nome_aleatorio)
+
+    os.makedirs(os.path.dirname(imagem_path), exist_ok=True)
+
+    with open(imagem_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+
     for e in st.session_state.eventos:
         if e["id"] == evento_id:
             e["nome"] = nome
-            e["horario"] = horario
             e["data"] = data
-            e["descricao"] = descricao
-            e["imagem"] = imagem
             e["local"] = local
+            e["descricao"] = descricao
+            e["imagem"] = imagem_path
+            e["horario"] = horario
             e["qntd_ingresso"] = qntd_ingresso
             e["valor_ingresso"] = valor_ingresso
             break
-        
+
     conexao = sqlite3.connect("dados.db")
     cursor = conexao.cursor()
+
     cursor.execute("""
         UPDATE Eventos
         SET Nome=?, Horario=?, Data=?, Descricao=?, Imagem=?, Local=?
         WHERE ID=?
-    """, (nome, horario, data, descricao, imagem, local))
-    
-    cursor.execute("""
-        UPDATE Ingressos
-        SET Valor=?
-        WHERE Evento_ID=?", 
-    """, (valor_ingresso, evento_id))
-    
-    if imagem and imagem != "temp":
-        cursor.execute("UPDATE Eventos SET Imagem=? WHERE ID=?", (imagem, evento_id))
+    """, (nome, horario, data, descricao, imagem_path, local, evento_id))
+
+    if valor_ingresso is not None:
+        cursor.execute("""
+            UPDATE Ingressos
+            SET Valor=?
+            WHERE Evento_ID=?
+        """, (float(valor_ingresso), evento_id))
+
     conexao.commit()
     conexao.close()
-        
+
+    st.success("Evento atualizado com sucesso!")
     st.session_state.evento_editar_id = None
     st.rerun()
 
@@ -225,12 +242,12 @@ def carregar_eventos():
     eventos = []
     for evento in eventos_bd:
         cursor.execute("SELECT ID, Cliente_ID, Valor FROM Ingressos WHERE Evento_ID = ?", (evento[0],))
-        qntd_ingresso_disponiveis = 0
         ingressos_bd = cursor.fetchall()
-        for ingresso in ingressos_bd:
-            if ingresso[1] is None:
-                qntd_ingresso_disponiveis += 1
         
+        qntd_ingresso_disponiveis = sum(1 for ingresso in ingressos_bd if ingresso[1] is None)
+        
+        preco = ingressos_bd[0][2] if ingressos_bd else 0  # Preço padrão 0 se não houver ingressos
+
         eventos.append({
             "id": evento[0],
             "nome": evento[1],
@@ -240,31 +257,42 @@ def carregar_eventos():
             "imagem": evento[5],
             "local": evento[6],
             "qntd_ingresos_disponiveis": qntd_ingresso_disponiveis,
-            "preco_ingressos": ingressos_bd[0][2]
+            "preco_ingressos": preco
         })
         
-        return eventos
+    return eventos
 
 def salvarEventoBD(nome, horario, data, qntd_ingresso, descricao, imagem, local, valor_ingresso):
+    ext = os.path.splitext(imagem.name)[1]
+    nome_aleatorio = f"{uuid.uuid4().hex[:8]}{ext}"
+    imagem_path = os.path.join("imagens", "eventos", nome_aleatorio)
+
+    os.makedirs(os.path.dirname(imagem_path), exist_ok=True)
+
+    with open(imagem_path, "wb") as f:
+        f.write(imagem.getbuffer())
+    
     conexao = sqlite3.connect('dados.db')
     cursor = conexao.cursor()
+        
     #gerar codigo para numero aleatorio para colocar no nome da imagem
     cursor.execute('''
         INSERT INTO Eventos (Nome, Horario, Data, Descricao, Imagem, Local)
         VALUES (?, ?, ?, ?, ?, ?)
-    ''', (nome, horario, data, descricao, int(imagem), local))
+    ''', (nome, horario, data, descricao, imagem_path, local))
 
     evento_id = cursor.lastrowid
 
     conexao.commit()
 
-    for i in range(qntd_ingresso):
+    for i in range(int(qntd_ingresso)):
         cursor.execute('''
             INSERT INTO Ingressos (Evento_ID, Valor)
             VALUES (?, ?)
         ''', (evento_id, valor_ingresso))
         
-        conexao.commit()
+    conexao.commit()
+    conexao.close()
         
     st.success("Evento adicionado com sucesso!")
     st.session_state.eventos.append({
