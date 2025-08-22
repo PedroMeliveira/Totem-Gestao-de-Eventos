@@ -60,8 +60,8 @@ def pagina_crud_eventos():
 
             @st.dialog(f"Editar {evento['nome']}")
             def editar():
-                nome = st.text_input("Nome", value=evento["nome"])
-                local = st.text_input("Local", value=evento["local"])
+                nome = st.text_input("Nome", value=evento["nome"], autocomplete="off")
+                local = st.text_input("Local", value=evento["local"], autocomplete="off")
                 
                 col1, col2 = st.columns(2)
                 with col1:
@@ -75,7 +75,7 @@ def pagina_crud_eventos():
                         qntd_ingresso = st.number_input("Qntd de ingressos disponíveis", step=1, format="%d", value=evento["qntd_ingressos_disponiveis"])
                         preco_ingresso = st.number_input("Preço do ingresso", value=evento["preco_ingresso"])
                         
-                descricao = st.text_area("Descrição", value=evento["descricao"])
+                descricao = st.text_area("Descrição", value=evento["descricao"], autocomplete="off")
 
                 st.write("Imagem atual:")
                 if evento.get("imagem") and os.path.exists(evento["imagem"]):
@@ -131,9 +131,9 @@ def pagina_crud_eventos():
             if "chave" not in st.session_state:
                 st.session_state.chave = 0
 
-            nome = st.text_input("Nome", key=f"nome_{st.session_state.chave}")
+            nome = st.text_input("Nome", key=f"nome_{st.session_state.chave}", autocomplete="off")
 
-            local = st.text_input("Local", key=f"local_{st.session_state.chave}")
+            local = st.text_input("Local", key=f"local_{st.session_state.chave}", autocomplete="off")
             
             col1, col2 = st.columns(2)
             with col1:
@@ -157,7 +157,7 @@ def pagina_crud_eventos():
                     with col2:
                         valor_ingresso = st.number_input("Valor do ingresso", min_value=0.0, step=0.5, key=f"valor_{st.session_state.chave}")
                     
-            descricao = st.text_area("Descrição", key=f"descricao_{st.session_state.chave}")
+            descricao = st.text_area("Descrição", key=f"descricao_{st.session_state.chave}", autocomplete="off")
 
             col3, col4, col5 = st.columns(3)
             with col4:
@@ -207,7 +207,6 @@ def salvar_edicao_eventos(evento_id, nome, data, local, imagem_path, descricao, 
     conexao.commit()
     conexao.close()
 
-    st.success("Evento atualizado com sucesso!")
     st.session_state.evento_editar_id = None
     st.rerun()
 
@@ -414,13 +413,13 @@ def pagina_crud_alimentos():
 
             @st.dialog(f"Editar {alimento['nome']}")
             def editar():
-                nome = st.text_input("Nome", value=alimento["nome"])
+                nome = st.text_input("Nome", value=alimento["nome"], autocomplete="off")
                 preco = st.number_input("Preço", value=float(alimento["preco"]), step=0.5)
                 qntd = st.number_input("Quantidade", value=int(alimento["qntd"]), step=1)
                 categoria = st.selectbox("Categoria", 
                                         ["Bebida", "Entrada", "Combos", "Principais"],
                                         index=["Bebida", "Entrada", "Combos", "Principais"].index(alimento.get("categoria", "Bebida")))
-                descricao = st.text_area("Descrição", value=alimento["descricao"])
+                descricao = st.text_area("Descrição", value=alimento["descricao"], autocomplete="off")
 
                 st.write("Imagem atual:")
                 if alimento.get("imagem") and os.path.exists(alimento["imagem"]):
@@ -475,7 +474,7 @@ def pagina_crud_alimentos():
             if "chave" not in st.session_state:
                 st.session_state.chave = 0
 
-            nome = st.text_input("Nome", key=f"nome_{st.session_state.chave}")
+            nome = st.text_input("Nome", key=f"nome_{st.session_state.chave}", autocomplete="off")
             preco = st.number_input("Preço", min_value=0.0, step=0.5, key=f"preco_{st.session_state.chave}")
             qntd = st.number_input("Quantidade", min_value=1, step=1, key=f"qntd_{st.session_state.chave}")
             categoria = st.selectbox("Categoria", 
@@ -492,12 +491,14 @@ def pagina_crud_alimentos():
                 if uploaded_file:
                     st.image(uploaded_file, caption="Pré-visualização", width=300)
 
-            descricao = st.text_area("Descrição", key=f"desc_{st.session_state.chave}")
+            descricao = st.text_area("Descrição", key=f"desc_{st.session_state.chave}", autocomplete="off")
 
             col3, col4, col5 = st.columns(3)
             
             with col4:
                 submit = st.form_submit_button("Adicionar", type="primary", use_container_width=True)
+                data = datetime.strptime(str(data), '%Y-%m-%d').date()
+                data = data.strftime("%d/%m/%Y")
                 if submit:
                     if not nome or preco is None or qntd is None or not categoria or not descricao:
                         st.warning("Por favor, preencha todos os campos.")
@@ -624,11 +625,11 @@ def pagina_gerenciar_admins():
             with st.expander(f"{nome_atual} ({email_atual})"):
                 data_nasc_atual = datetime.strptime(data_nasc_atual, "%d/%m/%Y").date()
 
-                novo_nome = st.text_input("Nome", value=nome_atual, key=f"nome_{admin_id}")
-                novo_email = st.text_input("Email", value=email_atual, key=f"email_{admin_id}")
-                novo_cpf = st.text_input("CPF", value=cpf_atual, key=f"cpf_{admin_id}")
+                novo_nome = st.text_input("Nome", value=nome_atual, key=f"nome_{admin_id}", autocomplete="off")
+                novo_email = st.text_input("Email", value=email_atual, key=f"email_{admin_id}", autocomplete="off")
+                novo_cpf = st.text_input("CPF", value=cpf_atual, key=f"cpf_{admin_id}", autocomplete="off")
                 novo_data_nasc = st.date_input("Data de Nascimento", value=data_nasc_atual, key=f"data_nasc_{admin_id}", min_value=date(1930, 12, 31), format='DD/MM/YYYY')
-                nova_senha = st.text_input("Senha (deixe em branco para não alterar)", type="password", key=f"senha_{admin_id}")
+                nova_senha = st.text_input("Senha (deixe em branco para não alterar)", type="password", key=f"senha_{admin_id}", autocomplete="new-password")
 
                 col1, col2 = st.columns(2)
                 with col1:
@@ -662,14 +663,14 @@ def pagina_gerenciar_admins():
             resultado_email = False
             resultado_senha = False
 
-            nome = st.text_input("Nome", key=f"novo_admin_nome_{st.session_state.chave}")
-            email = st.text_input("Email", key=f"novo_admin_email_{st.session_state.chave}")
+            nome = st.text_input("Nome", key=f"novo_admin_nome_{st.session_state.chave}", autocomplete="off")
+            email = st.text_input("Email", key=f"novo_admin_email_{st.session_state.chave}", autocomplete="off")
             if len(email) != 0:
                 resultado_email = validaEmail(email)
             
-            cpf = st.text_input("CPF", key=f"novo_admin_cpf_{st.session_state.chave}")
+            cpf = st.text_input("CPF", key=f"novo_admin_cpf_{st.session_state.chave}", autocomplete="off")
             data_nascimento = st.date_input("Data de nascimento", format='DD/MM/YYYY', min_value=date(1945, 12, 31), key=f"novo_admin_data_nasc_{st.session_state.chave}")            
-            senha = st.text_input("Senha", type="password", key=f"novo_admin_senha_{st.session_state.chave}")
+            senha = st.text_input("Senha", type="password", key=f"novo_admin_senha_{st.session_state.chave}", autocomplete="new-password")
             if len(senha) != 0:
                 resultado_senha = validaSenha(senha)
 

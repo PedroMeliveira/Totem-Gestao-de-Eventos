@@ -1,20 +1,11 @@
 falta fazer:
 - carrinho cliente alimentos e ingressos
-- arrumar telas de cadastrar/login (melhorar elas e ver se tem como deixar digitar só o cpf)
-- nas telas de login, cadastrar e adicionar, usar o widget form, que nem quando vai adicionar admin
 - estatísticas evento
-- fazer crud de alimentos e de eventos adicionar a imagem com um código aleatório como nome
-- não dá pra editar eventos
-- quando for adicionar admin, checar se cpf é válido
-- tirar autocomplete de tudo
+- nas telas de login, cadastrar, usar o widget form
+- quando for adicionar admin/cliente, checar se cpf é válido
 
 bugs:
-- em todo input que adicionar data, botar no formato certo
-
-
 - quando vai adicionar um alimento, se algum campo estiver vazio dá erro
 - quando vai adicionar um alimento, salva a imagem na pasta de eventos
 - quando edita a imagem de um alimento, não salva com o nome antigo dela
-- em algumas funções, tem uns cpfs que não são utilizados
-- quando vai adicionar administrador, falta pegar o cpf dele e checar se o email, cpf e senha são válidos
-- tirar algumas mensagens de sucesso (elas somem mt rápido por conta do st.rerun())
+- quando edita a imagem de um evento, não salva com o nome antigo dela
