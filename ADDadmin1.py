@@ -10,6 +10,6 @@ senha_hash = bcrypt.hashpw(senha_bytes, sal)
 
 
 cursor.execute("INSERT INTO Admins (Nome, CPF, Data_Nasc, Email, Senha) VALUES (?, ?, ?, ?, ?)",
-               ("Admin", "12345678901", "2000-01-01", "admin@admin.com", senha_hash))
+               ("Admin", "12345678901", "01/01/2000", "admin@admin.com", senha_hash))
 
 conexao.commit()

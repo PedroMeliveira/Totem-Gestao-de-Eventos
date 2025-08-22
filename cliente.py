@@ -246,12 +246,7 @@ def pagina_cadastrar():
         resultado_senha = validaSenha(senha)
 
     col1, col2, col3= st.columns(3)
-    with col1:
-        def erroCadastro(nome, cpf, email, senha):
-            if len(nome) == 0 or len(cpf) == 0 or len(email) == 0 or len(senha) == 0:
-                return "Preencha todos os campos"
-            return "Algumas informações estão inválidas"
-            
+    with col1:            
         if resultado_email and resultado_senha:
             if st.button("Cadastro", use_container_width=True, type="primary", key="cadastroInfoValidas"):
                 realizaCadastro(nome, cpf, email, data_nascimento, senha)
@@ -268,6 +263,11 @@ def pagina_cadastrar():
             use_container_width=True
         )
 
+
+def erroCadastro(nome, cpf, email, senha):
+    if len(nome) == 0 or len(cpf) == 0 or len(email) == 0 or len(senha) == 0:
+        return "Preencha todos os campos"
+    return "Algumas informações estão inválidas"
 
 def validaEmail(email):
     padrao = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
