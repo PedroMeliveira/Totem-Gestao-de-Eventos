@@ -41,6 +41,8 @@ def pagina_crud_eventos():
                         st.write(f"**Nome:** {evento['nome']}")
                         st.write(f"**Data:** {evento['data']}")
                         st.write(f"**Local:** {evento['local']}")
+                        st.write(f"**Horário:** {evento['horario']}")
+
                         st.image(evento["imagem"], width=250)
                         st.write(evento["descricao"])
 
@@ -63,7 +65,9 @@ def pagina_crud_eventos():
                 
                 col1, col2 = st.columns(2)
                 with col1:
-                    data = st.date_input("Data", value=evento["data"])
+                    data_evento = datetime.strptime(evento["data"], "%d/%m/%Y").date()
+                    data_evento = st.date_input("Data", value=data_evento, min_value=date(1930, 12, 31), format='DD/MM/YYYY')
+
                 with col2:
                     horario = st.time_input("Horário", value=evento["horario"])
                          
@@ -91,7 +95,9 @@ def pagina_crud_eventos():
                     st.image(imagem_path, caption="Nova imagem", width=250)
                         
                 if st.button("Salvar alterações", type="primary"):
-                    salvar_edicao_eventos(evento["id"], nome, data, local, imagem_path, descricao, horario, int(qntd_ingresso), preco_ingresso, uploaded_file)
+                    data_evento = datetime.strptime(str(data_evento), "%Y-%m-%d").date()
+                    data_evento = data_evento.strftime("%d/%m/%Y")
+                    salvar_edicao_eventos(evento["id"], nome, data_evento, local, imagem_path, descricao, str(horario)[:5], int(qntd_ingresso), preco_ingresso, uploaded_file)
 
             editar()
 
@@ -106,7 +112,7 @@ def pagina_crud_eventos():
                 st.write(f"**Data:** {evento['data']}")
                 st.write(f"**Horário:** {evento['horario']}")
                 st.write(f"**Local:** {evento['local']}")
-                st.write(f"**Descrição: {evento['descricao']}")
+                st.write(f"**Descrição:** {evento['descricao']}")
                 st.image(evento["imagem"], width=250)
 
                 col1, col2 = st.columns(2)
@@ -115,7 +121,7 @@ def pagina_crud_eventos():
                         st.session_state.evento_remover_id = None
                         st.rerun()
                 with col2:
-                    if st.button("🗑️ Confirmar remoção", type="primary"):
+                    if st.button("🗑️ Confirmar", type="primary"):
                         remover_evento(evento["id"])
 
             confirmar_remocao()
@@ -156,12 +162,14 @@ def pagina_crud_eventos():
             col3, col4, col5 = st.columns(3)
             with col4:
                 submit = st.form_submit_button("Adicionar", type="primary", use_container_width=True)
+                data = datetime.strptime(str(data), '%Y-%m-%d').date()
+                data = data.strftime("%d/%m/%Y")
                 if submit:
                     if not nome or not horario or not local or not descricao or not uploaded_file or not qntd_ingresso or not valor_ingresso:
                         st.warning("Por favor, preencha todos os campos.")
                         
                     else:
-                        salvarEventoBD(nome, str(horario), data, qntd_ingresso, descricao, uploaded_file, local, valor_ingresso)
+                        salvarEventoBD(nome, str(horario)[:5], data, qntd_ingresso, descricao, uploaded_file, local, valor_ingresso)
                         st.session_state.eventos = carregar_eventos()
                         st.session_state.chave += 1
                         st.rerun()
@@ -619,7 +627,7 @@ def pagina_gerenciar_admins():
                 novo_nome = st.text_input("Nome", value=nome_atual, key=f"nome_{admin_id}")
                 novo_email = st.text_input("Email", value=email_atual, key=f"email_{admin_id}")
                 novo_cpf = st.text_input("CPF", value=cpf_atual, key=f"cpf_{admin_id}")
-                novo_data_nasc = st.date_input("Data de Nascimento", value=data_nasc_atual, key=f"data_nasc_{admin_id}")
+                novo_data_nasc = st.date_input("Data de Nascimento", value=data_nasc_atual, key=f"data_nasc_{admin_id}", min_value=date(1930, 12, 31), format='DD/MM/YYYY')
                 nova_senha = st.text_input("Senha (deixe em branco para não alterar)", type="password", key=f"senha_{admin_id}")
 
                 col1, col2 = st.columns(2)
