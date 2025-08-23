@@ -75,7 +75,7 @@ def pagina_crud_eventos():
                         qntd_ingresso = st.number_input("Qntd de ingressos disponíveis", step=1, format="%d", value=evento["qntd_ingressos_disponiveis"])
                         preco_ingresso = st.number_input("Preço do ingresso", value=evento["preco_ingresso"])
                         
-                descricao = st.text_area("Descrição", value=evento["descricao"], autocomplete="off")
+                descricao = st.text_area("Descrição", value=evento["descricao"])
 
                 st.write("Imagem atual:")
                 if evento.get("imagem") and os.path.exists(evento["imagem"]):
@@ -157,7 +157,7 @@ def pagina_crud_eventos():
                     with col2:
                         valor_ingresso = st.number_input("Valor do ingresso", min_value=0.0, step=0.5, key=f"valor_{st.session_state.chave}")
                     
-            descricao = st.text_area("Descrição", key=f"descricao_{st.session_state.chave}", autocomplete="off")
+            descricao = st.text_area("Descrição", key=f"descricao_{st.session_state.chave}")
 
             col3, col4, col5 = st.columns(3)
             with col4:
@@ -419,7 +419,7 @@ def pagina_crud_alimentos():
                 categoria = st.selectbox("Categoria", 
                                         ["Bebida", "Entrada", "Combos", "Principais"],
                                         index=["Bebida", "Entrada", "Combos", "Principais"].index(alimento.get("categoria", "Bebida")))
-                descricao = st.text_area("Descrição", value=alimento["descricao"], autocomplete="off")
+                descricao = st.text_area("Descrição", value=alimento["descricao"])
 
                 st.write("Imagem atual:")
                 if alimento.get("imagem") and os.path.exists(alimento["imagem"]):
@@ -475,13 +475,17 @@ def pagina_crud_alimentos():
                 st.session_state.chave = 0
 
             nome = st.text_input("Nome", key=f"nome_{st.session_state.chave}", autocomplete="off")
-            preco = st.number_input("Preço", min_value=0.0, step=0.5, key=f"preco_{st.session_state.chave}")
-            qntd = st.number_input("Quantidade", min_value=1, step=1, key=f"qntd_{st.session_state.chave}")
             categoria = st.selectbox("Categoria", 
-                                    ["Bebida", "Entrada", "Combos", "Principais"], 
-                                    key=f"categoria_{st.session_state.chave}")
-
+                        ["Bebida", "Entrada", "Combos", "Principais"], 
+                        key=f"categoria_{st.session_state.chave}")
+            
             col1, col2 = st.columns(2)
+            with col1:
+                preco = st.number_input("Preço", min_value=0.0, step=0.5, key=f"preco_{st.session_state.chave}")
+            
+            with col2:
+                qntd = st.number_input("Quantidade", min_value=1, step=1, key=f"qntd_{st.session_state.chave}")
+
             with col1:
                 uploaded_file = st.file_uploader("Upload da imagem", 
                                                 type=["jpg", "jpeg", "png"], 
@@ -491,16 +495,14 @@ def pagina_crud_alimentos():
                 if uploaded_file:
                     st.image(uploaded_file, caption="Pré-visualização", width=300)
 
-            descricao = st.text_area("Descrição", key=f"desc_{st.session_state.chave}", autocomplete="off")
+            descricao = st.text_area("Descrição", key=f"desc_{st.session_state.chave}")
 
             col3, col4, col5 = st.columns(3)
             
             with col4:
                 submit = st.form_submit_button("Adicionar", type="primary", use_container_width=True)
-                data = datetime.strptime(str(data), '%Y-%m-%d').date()
-                data = data.strftime("%d/%m/%Y")
                 if submit:
-                    if not nome or preco is None or qntd is None or not categoria or not descricao:
+                    if not nome or not preco or not descricao or not uploaded_file or not qntd or not categoria:
                         st.warning("Por favor, preencha todos os campos.")
                         
                     else:
@@ -513,7 +515,7 @@ def pagina_crud_alimentos():
 def salvarAlimentoBD(nome, preco, descricao, imagem, categoria, qntd):
     ext = os.path.splitext(imagem.name)[1]
     nome_aleatorio = f"{uuid.uuid4().hex[:8]}{ext}"
-    imagem_path = os.path.join("imagens", "eventos", nome_aleatorio)
+    imagem_path = os.path.join("imagens", "alimentos", nome_aleatorio)
 
     os.makedirs(os.path.dirname(imagem_path), exist_ok=True)
 

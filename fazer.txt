@@ -5,7 +5,5 @@ falta fazer:
 - quando for adicionar admin/cliente, checar se cpf é válido
 
 bugs:
-- quando vai adicionar um alimento, se algum campo estiver vazio dá erro
-- quando vai adicionar um alimento, salva a imagem na pasta de eventos
 - quando edita a imagem de um alimento, não salva com o nome antigo dela
 - quando edita a imagem de um evento, não salva com o nome antigo dela

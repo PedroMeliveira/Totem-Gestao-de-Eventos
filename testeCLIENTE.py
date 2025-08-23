@@ -108,7 +108,6 @@ def pagina_area_alimentos():
 
             with col1:
 
-                # !!!
                 if item["img"] and os.path.exists(item["img"]):
                     st.image(item["img"], width=250)
 
@@ -167,6 +166,7 @@ def pagina_central_eventos():
     with tab1:
         conexao = sqlite3.connect("dados.db")
         cursor = conexao.cursor()
+
         cursor.execute("SELECT ID, Nome, Data, Local, Descricao, Imagem FROM Eventos ORDER BY Data")
         linhas = cursor.fetchall()
         conexao.close()
@@ -206,10 +206,9 @@ def pagina_central_eventos():
                         st.write(f"**Local:** {e['local']}")
                         st.write(e["descricao"])
 
-                        # !!!
                         if st.button("Participar", type="primary"):
-                            ok = add_event_ticket_to_cart(st.session_state.cliente_id, e["id"])
-                            if ok:
+                            resultado = add_event_ticket_to_cart(st.session_state.cliente_id, e["id"])
+                            if resultado:
                                 st.success(f"{e['nome']} foi adicionado ao carrinho!")
                             else:
                                 st.warning("Ingressos esgotados para este evento.")
@@ -456,9 +455,6 @@ def pagina_login():
         with col2:
             cadastrar = st.form_submit_button("Ir para Cadastro", use_container_width=True)
 
-    if 'last_action' not in st.session_state:
-        st.session_state.last_action = None
-
     if cadastrar:
         st.session_state.auth_user = "cadastrar"
         st.rerun()
@@ -474,22 +470,23 @@ def checaLogin(email, senha):
 
     conexao = sqlite3.connect("dados.db")
     cursor = conexao.cursor()
+
     cursor.execute("SELECT ID, Nome, Email, Senha FROM Clientes WHERE Email = ?", (email,))
-    user_data = cursor.fetchone()
+    dados = cursor.fetchone()
     conexao.close()
 
-    if user_data is None:
+    if dados is None:
         st.error("Esse email não está cadastrado em nossos sistemas.")
         return
 
-    cliente_id, nome, email_bd, senha_bd = user_data
+    cliente_id, nome, email_bd, senha_bd = dados
     senha_bytes = senha.encode("utf-8")
     try:
-        ok = bcrypt.checkpw(senha_bytes, senha_bd)
+        resultado = bcrypt.checkpw(senha_bytes, senha_bd)
     except Exception:
-        ok = False
+        resultado = False
 
-    if ok:
+    if resultado:
         st.session_state.cliente_id = cliente_id
         st.session_state.nome_cliente = nome
         st.session_state.email_cliente = email_bd
@@ -507,47 +504,10 @@ def pagina_cadastrar():
     st.title("Cadastro")
     st.divider()
 
-    # Funções de validação
-    def validaEmail(email):
-        padrao = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-        email_valido = bool(re.match(padrao, email))
-
-        if not email_valido:
-            st.error("Insira um email válido. Exemplo: nome@email.com")
-            return False
-        return True
-
-    def validaSenha(senha):
-        senha_valida = True
-        mensagem = ""
-
-        if len(senha) < 8:
-            mensagem += "A senha deve ter 8 ou mais dígitos\n"
-            senha_valida = False
-
-        if not re.search(r'[A-Z]', senha):
-            mensagem += "\nA senha precisa ter ao menos uma letra maiúscula\n"
-            senha_valida = False
-
-        if not re.search(r'[a-z]', senha):
-            mensagem += "\nA senha precisa ter ao menos uma letra minúscula\n"
-            senha_valida = False
-
-        if not re.search(r'\d', senha):
-            mensagem += "\nA senha precisa ter ao menos um dígito\n"
-            senha_valida = False
-
-        if not re.search(r'[\W_]', senha):
-            mensagem += "\nA senha precisa ter ao menos um carácter especial\n"
-            senha_valida = False
-        
-        if senha_valida:
-            return True
-        st.error(mensagem)
-        return False
-
     with st.form("cadastro_form"):
         nome = st.text_input("Nome completo", key="cadastro_nome", autocomplete="off")
+
+
         # CPF apenas dígitos
         cpf_raw = st.text_input("CPF (apenas números)", key="cadastro_cpf", autocomplete="off", help="Será salvo somente com dígitos.")
         # Sanitiza visualmente (mantém só dígitos)
@@ -560,10 +520,10 @@ def pagina_cadastrar():
             email = st.text_input("Email", key="cadastro_email", autocomplete="off")
         senha = st.text_input("Senha", type="password", key="cadastro_senha", autocomplete="off")
 
-        colx1, colx2 = st.columns(2)
-        with colx1:
+        col3, col4 = st.columns(2)
+        with col3:
             enviar = st.form_submit_button("Cadastrar", use_container_width=True, type="primary")
-        with colx2:
+        with col4:
             voltar = st.form_submit_button("Voltar ao Login", use_container_width=True)
 
     if voltar:
@@ -579,16 +539,17 @@ def pagina_cadastrar():
 
         conexao = sqlite3.connect("dados.db")
         cursor = conexao.cursor()
+
         cursor.execute("SELECT Email FROM Clientes WHERE Email = ?", (email,))
-        ja = cursor.fetchone()
-        if ja:
+        existe = cursor.fetchone()
+        if existe:
             st.error("Esse email já está cadastrado, utilize outro email ou faça login.")
             conexao.close()
             return
 
         senha_bytes = senha.encode("utf-8")
-        sal = bcrypt.gensalt()
-        senha_hash = bcrypt.hashpw(senha_bytes, sal)
+        salt = bcrypt.gensalt()
+        senha_hash = bcrypt.hashpw(senha_bytes, salt)
 
         cursor.execute(
             "INSERT INTO Clientes (Nome, CPF, Data_Nasc, Email, Senha) VALUES (?, ?, ?, ?, ?)",
@@ -603,6 +564,46 @@ def pagina_cadastrar():
         st.session_state.email_cliente = email
         ir_para_login()
         st.rerun()
+
+
+# Funções de validação Login/Cadastro
+def validaEmail(email):
+    padrao = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    email_valido = bool(re.match(padrao, email))
+
+    if not email_valido:
+        st.error("Insira um email válido. Exemplo: nome@email.com")
+        return False
+    return True
+
+def validaSenha(senha):
+    senha_valida = True
+    mensagem = ""
+
+    if len(senha) < 8:
+        mensagem += "A senha deve ter 8 ou mais dígitos\n"
+        senha_valida = False
+
+    if not re.search(r'[A-Z]', senha):
+        mensagem += "\nA senha precisa ter ao menos uma letra maiúscula\n"
+        senha_valida = False
+
+    if not re.search(r'[a-z]', senha):
+        mensagem += "\nA senha precisa ter ao menos uma letra minúscula\n"
+        senha_valida = False
+
+    if not re.search(r'\d', senha):
+        mensagem += "\nA senha precisa ter ao menos um dígito\n"
+        senha_valida = False
+
+    if not re.search(r'[\W_]', senha):
+        mensagem += "\nA senha precisa ter ao menos um carácter especial\n"
+        senha_valida = False
+    
+    if senha_valida:
+        return True
+    st.error(mensagem)
+    return False
 
 
 # LÓGICA TROCAR DE PÁGINAS AUTENTIFICADORAS
