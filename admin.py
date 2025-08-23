@@ -793,34 +793,32 @@ def sidebar_perfil_admin():
 
 def pagina_login():
     st.title("Bem-vindo Administrador")
-    st.divider()
-    st.markdown("### Login")
-    email = st.text_input("Email", autocomplete="off")
-    senha_digitada = st.text_input("Senha", type="password", autocomplete="off")
 
-    col1, col2 = st.columns(2)
+    with st.form("login_form_admin"):
+        st.markdown("### Login")
+        email = st.text_input("Email", autocomplete="off")
+        senha_digitada = st.text_input("Senha", type="password", autocomplete="off")
 
-    with col1:
-        st.button(
-            "Login",
-            use_container_width=True,
-            type="primary",
-            on_click=checaLogin,
-            args=(email, senha_digitada)
-        )
+        col1, col2 = st.columns(2)
+
+        with col1:
+            submit = st.form_submit_button("Login", use_container_width=True, type="primary")
+        
+    if submit:
+        checaLogin(email, senha_digitada)
 
 
 def checaLogin(email, senha):
+    if not email or not senha:
+        st.error("Por favor, preencha todos os campos.")
+        return
+
     conexao = sqlite3.connect("dados.db")
     cursor = conexao.cursor()
 
     query = "SELECT ID, Nome, Senha FROM Admins WHERE Email = ?"
     cursor.execute(query, (email,))
-    dados = cursor.fetchone()
-
-    if not email or not senha:
-        st.error("Por favor, preencha todos os campos.")
-        return
+    dados = cursor.fetchone() 
 
     if dados is not None:
         admin_id, nome, senha_bd = dados
