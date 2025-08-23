@@ -1,7 +1,6 @@
 falta fazer:
 - carrinho cliente alimentos e ingressos
 - estatísticas evento
-- nas telas de login, cadastrar, usar o widget form
 - quando for adicionar admin/cliente, checar se cpf é válido
 
 bugs:
