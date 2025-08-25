@@ -258,6 +258,68 @@ def pagina_central_eventos():
         #             st.rerun()
 
 
+# CARRINHO DE COMPRAS
+
+
+def pagina_carrinho():
+    sidebar_perfil()
+    st.title("Carrinho de Compras")
+    st.divider()
+    
+    itens = get_cart_alimentos(st.session_state.cliente_id)
+    ingressos = get_cart_ingressos(st.session_state.cliente_id)
+
+    if not itens and not ingressos:
+        st.info("Carrinho de alimentos vazio.")
+
+    else:
+        
+        total = 0.0
+        
+        st.subheader("Ingressos no Carrinho")
+        for evento_id, nome, data, local, qtde, valor in ingressos:
+            total += float(valor) * qtde
+            col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+            with col1:
+                st.write(f"**{nome}** — {data} — {local}")
+                st.caption(f"{qtde} x R$ {float(valor):.2f}")
+            with col2:
+                if st.button("➕", key=f"mais_ing_{evento_id}"):
+                    add_event_ticket_to_cart(st.session_state.cliente_id, evento_id) 
+                    st.rerun()
+            with col3:
+                if st.button("➖", key=f"menos_ing_{evento_id}"):
+                    remove_one_ingresso_from_cart(st.session_state.cliente_id, evento_id)
+                    st.rerun()
+            with col4:
+                st.write(f"R$ {float(valor) * qtde:.2f}")
+        
+        st.subheader("Alimentos no Carrinho")
+        for alimento_id, nome, preco, qtd, img, desc in itens:
+            total += preco * qtd
+            col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+
+            with col1:
+                st.write(f"**{nome}** — Quantidade: {qtd}")
+                st.caption(f"R$ {preco:.2f} cada")
+
+            with col2:
+                if st.button("➕", key=f"mais_{alimento_id}"):
+                    add_alimento_to_cart(st.session_state.cliente_id, alimento_id, 1)
+                    st.rerun()
+
+            with col3:
+                if st.button("➖", key=f"menos_{alimento_id}"):
+                    remove_one_alimento_from_cart(st.session_state.cliente_id, alimento_id)
+                    st.rerun()
+
+            with col4:
+                st.write(f"R$ {preco * qtd:.2f}")
+
+        st.markdown(f"### Total: R$ {total:.2f}")
+        
+        finalizar = st.button("Finalizar Compra", type='primary')
+
 
 # FUNÇÕES CARRINHO
 
@@ -459,28 +521,6 @@ def finalizar_compra(cliente_id):
 
     conexao.commit()
     conexao.close()
-
-
-# CARRINHO DE COMPRAS
-
-def pagina_carrinho():
-    st.title("Carrinho de Compras")
-    st.divider()
-    
-    itens = [{"Alimento": alimento, "Quantidade": quantidade} for alimento, quantidade in st.session_state.carrinho.items() if quantidade > 0]
-    if not itens:
-        st.info("Carrinho vazio.")
-    else:
-        for item in itens:
-            col1, col2, col3 = st.columns([3, 1, 1])
-            with col1:
-                st.write(f"**{item['Alimento']}** - Quantidade: {item['Quantidade']}")
-            with col2:
-                if st.button("+", key=f"mais_{item['Alimento']}"):
-                    st.session_state.carrinho[item['Alimento']] += 1
-            with col3:
-                if st.button("-", key=f"menos_{item['Alimento']}"):
-                    st.session_state.carrinho[item['Alimento']] = max(0, st.session_state.carrinho[item['Alimento']] - 1)
 
 
 # LOGIN E CADASTRO
