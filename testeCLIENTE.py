@@ -440,7 +440,30 @@ def finalizar_compra(cliente_id):
     conexao.close()
 
 
+# CARRINHO DE COMPRAS
+
+def pagina_carrinho():
+    st.title("Carrinho de Compras")
+    st.divider()
+    
+    itens = [{"Alimento": alimento, "Quantidade": quantidade} for alimento, quantidade in st.session_state.carrinho.items() if quantidade > 0]
+    if not itens:
+        st.info("Carrinho vazio.")
+    else:
+        for item in itens:
+            col1, col2, col3 = st.columns([3, 1, 1])
+            with col1:
+                st.write(f"**{item['Alimento']}** - Quantidade: {item['Quantidade']}")
+            with col2:
+                if st.button("+", key=f"mais_{item['Alimento']}"):
+                    st.session_state.carrinho[item['Alimento']] += 1
+            with col3:
+                if st.button("-", key=f"menos_{item['Alimento']}"):
+                    st.session_state.carrinho[item['Alimento']] = max(0, st.session_state.carrinho[item['Alimento']] - 1)
+
+
 # LOGIN E CADASTRO
+
 
 def pagina_login():
     st.title("Bem-vindo")
@@ -506,7 +529,6 @@ def pagina_cadastrar():
 
     with st.form("cadastro_form"):
         nome = st.text_input("Nome completo", key="cadastro_nome", autocomplete="off")
-
 
         # CPF apenas dígitos
         cpf_raw = st.text_input("CPF (apenas números)", key="cadastro_cpf", autocomplete="off", help="Será salvo somente com dígitos.")
@@ -622,5 +644,6 @@ elif st.session_state.auth_user == "autenticado":
         st.Page(pagina_central_eventos, title="Central de Eventos", icon="🎉"),
         st.Page(pagina_area_alimentos, title="Área de Alimentos", icon="🍔"),
         st.Page(pagina_meus_ingressos, title="Meus Ingressos", icon="🎟️"),
+        st.Page(pagina_carrinho, title="Carrinho de Compras", icon="🛒"),
     ])
     nav.run()
