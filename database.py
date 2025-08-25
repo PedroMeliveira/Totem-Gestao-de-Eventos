@@ -55,8 +55,7 @@ cursor.execute('''
         Preco FLOAT NOT NULL,
         Categoria TEXT NOT NULL,
         Imagem TEXT NOT NULL,
-        Descricao TEXT NOT NULL,
-        Quantidade INTEGER NOT NULL DEFAULT 1
+        Descricao TEXT NOT NULL
     )
 ''')
 
@@ -73,6 +72,7 @@ cursor.execute('''
         ID INTEGER PRIMARY KEY AUTOINCREMENT,
         Carrinho_ID INTEGER NOT NULL,
         Alimento_ID INTEGER NOT NULL,
+        Quantidade INTEGER NOT NULL DEFAULT 1,
         FOREIGN KEY (Carrinho_ID) REFERENCES Carrinhos(ID),
         FOREIGN KEY (Alimento_ID) REFERENCES Alimentos(ID)
         )

@@ -261,25 +261,46 @@ def pagina_central_eventos():
 
 # FUNÇÕES CARRINHO
 
-def get_or_create_carrinho(cliente_id):
+def get_carrinho(cliente_id):
     conexao = sqlite3.connect("dados.db")
     cursor = conexao.cursor()
     cursor.execute("SELECT ID FROM Carrinhos WHERE Cliente_ID = ?", (cliente_id,))
-    row = cursor.fetchone()
-    if row:
-        conexao.close()
-        return row[0]
-    cursor.execute("INSERT INTO Carrinhos (Cliente_ID) VALUES (?)", (cliente_id,))
-    conexao.commit()
-    carrinho_id = cursor.lastrowid
+    carrinho_id = cursor.fetchone()
     conexao.close()
-    return carrinho_id
+     
+    if carrinho_id:
+        return carrinho_id[0]
+    
+    else:
+        raise ValueError(f"InInconsistência de dados: Carrinho não encontrado para o cliente_id {cliente_id}")
+
 
 
 def add_alimento_to_cart(cliente_id, alimento_id, qtd = 1):
-    carrinho_id = get_or_create_carrinho(cliente_id)
+    carrinho_id = get_carrinho(cliente_id)
     conexao = sqlite3.connect("dados.db")
     cursor = conexao.cursor()
+    
+    cursor.execute(
+        "SELECT ID FROM Alimento_no_Carrinho WHERE Carrinho_ID = ? AND Alimento_ID = ?", (carrinho_id, alimento_id)
+        )
+    alimento_presente = cursor.fetchone()
+    
+    if alimento_presente:
+        cursor.execute(
+            "UPDATE Alimento_no_Carrinho SET Quantidade = Quantidade + ? WHERE Carrinho_ID = ? AND Alimento_ID = ?",
+            (qtd, carrinho_id, alimento_id)
+            )
+    
+    else:
+        cursor.execute(
+            "INSERT INTO Alimento_no_Carrinho (Carrinho_ID, Alimento_ID, Quantidade) VALUES (?, ?, ?)",
+            (carrinho_id, alimento_id, qtd)
+            )
+    
+    conexao.commit()
+    conexao.close()
+    
     for _ in range(qtd):
         cursor.execute(
             "INSERT INTO Alimento_no_Carrinho (Carrinho_ID, Alimento_ID) VALUES (?, ?)",
@@ -290,7 +311,7 @@ def add_alimento_to_cart(cliente_id, alimento_id, qtd = 1):
 
 
 def remove_one_alimento_from_cart(cliente_id, alimento_id):
-    carrinho_id = get_or_create_carrinho(cliente_id)
+    carrinho_id = get_carrinho(cliente_id)
     conexao = sqlite3.connect("dados.db")
     cursor = conexao.cursor()
     # apaga apenas um registro desse alimento
@@ -310,7 +331,7 @@ def remove_one_alimento_from_cart(cliente_id, alimento_id):
 
 
 def clear_alimentos_cart(cliente_id):
-    carrinho_id = get_or_create_carrinho(cliente_id)
+    carrinho_id = get_carrinho(cliente_id)
     conexao = sqlite3.connect("dados.db")
     cursor = conexao.cursor()
     cursor.execute("DELETE FROM Alimento_no_Carrinho WHERE Carrinho_ID = ?", (carrinho_id,))
@@ -319,7 +340,7 @@ def clear_alimentos_cart(cliente_id):
 
 
 def get_cart_alimentos(cliente_id):
-    carrinho_id = get_or_create_carrinho(cliente_id)
+    carrinho_id = get_carrinho(cliente_id)
     conexao = sqlite3.connect("dados.db")
     cursor = conexao.cursor()
     cursor.execute(
@@ -357,7 +378,7 @@ def add_event_ticket_to_cart(cliente_id, evento_id):
         conexao.close()
         return False
     ingresso_id = row[0]
-    carrinho_id = get_or_create_carrinho(cliente_id)
+    carrinho_id = get_carrinho(cliente_id)
     cursor.execute(
         "INSERT INTO Ingresso_no_Carrinho (Carrinho_ID, Ingresso_ID) VALUES (?, ?)",
         (carrinho_id, ingresso_id),
@@ -368,7 +389,7 @@ def add_event_ticket_to_cart(cliente_id, evento_id):
 
 
 def get_cart_ingressos(cliente_id):
-    carrinho_id = get_or_create_carrinho(cliente_id)
+    carrinho_id = get_carrinho(cliente_id)
     conexao = sqlite3.connect("dados.db")
     cursor = conexao.cursor()
     cursor.execute(
@@ -389,7 +410,7 @@ def get_cart_ingressos(cliente_id):
 
 
 def remove_one_ingresso_from_cart(cliente_id, evento_id):
-    carrinho_id = get_or_create_carrinho(cliente_id)
+    carrinho_id = get_carrinho(cliente_id)
     conexao = sqlite3.connect("dados.db")
     cursor = conexao.cursor()
     # pega um ingresso desse evento que esteja no carrinho e remove
@@ -411,7 +432,7 @@ def remove_one_ingresso_from_cart(cliente_id, evento_id):
 
 
 def finalizar_compra(cliente_id):
-    carrinho_id = get_or_create_carrinho(cliente_id)
+    carrinho_id = get_carrinho(cliente_id)
     conexao = sqlite3.connect("dados.db")
     cursor = conexao.cursor()
 
