@@ -6,5 +6,9 @@ falta fazer:
 
 talvez:
 - adicionar uma verificação de idade em alguns eventos marcados como adultos (lugares com álcool)
+- adicionar imagens para o cliente e admin
+- Check-In -> aba para o Admin que mostra todos os eventos e os alimentos comprados por cliente, nos eventos
+              mostra os ingressos comprados por evento, podendo fazer o check-in de um ingresso 
 
 bugs:
+- mudar a altura das imagens, deixar elas todas com um mesmo tamanho
