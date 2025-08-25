@@ -454,10 +454,10 @@ def pagina_carrinho():
             with col1:
                 st.write(f"**{item['Alimento']}** - Quantidade: {item['Quantidade']}")
             with col2:
-                if st.button("+", key=f"mais_{item['Alimento']}"):
+                if st.button("➕", key=f"mais_{item['Alimento']}"):
                     st.session_state.carrinho[item['Alimento']] += 1
             with col3:
-                if st.button("-", key=f"menos_{item['Alimento']}"):
+                if st.button("➖", key=f"menos_{item['Alimento']}"):
                     st.session_state.carrinho[item['Alimento']] = max(0, st.session_state.carrinho[item['Alimento']] - 1)
 
 
