@@ -231,8 +231,11 @@ def pagina_central_eventos():
                     st.write(f"**{nome}** — {data} — {local}")
                     st.caption(f"{qtde} x R$ {float(valor):.2f}")
                 with col2:
-                    if st.button("-", key=f"menos_ing_{evento_id}"):
+                    if st.button("Remover 1", key=f"menos_ing_{evento_id}"):
                         remove_one_ingresso_from_cart(st.session_state.cliente_id, evento_id)
+                        st.rerun()
+                    if st.button("Adicionar 1", key=f"mais_ing_{evento_id}"):
+                        add_event_ticket_to_cart(st.session_state.cliente_id, evento_id) 
                         st.rerun()
                 with col3:
                     st.write(f"R$ {float(valor) * qtde:.2f}")
@@ -243,18 +246,16 @@ def pagina_central_eventos():
 
         st.markdown("---")
         st.markdown(f"### Total ingressos: R$ {total_ing:.2f}")
-        st.markdown(f"### Total alimentos: R$ {total_al:.2f}")
-        st.markdown(f"## Total geral: R$ {total_ing + total_al:.2f}")
 
-        with st.form("finalizar_compra_form"):
-            confirmar = st.form_submit_button("Finalizar Compra", use_container_width=True)
-            if confirmar:
-                if not ingressos and not itens_al:
-                    st.warning("Seu carrinho está vazio.")
-                else:
-                    finalizar_compra(st.session_state.cliente_id)
-                    st.success("Compra finalizada com sucesso! Seus ingressos já estão disponíveis em **Meus Ingressos**.")
-                    st.rerun()
+        # with st.form("finalizar_compra_form"):
+        #     confirmar = st.form_submit_button("Finalizar Compra", use_container_width=True)
+        #     if confirmar:
+        #         if not ingressos and not itens_al:
+        #             st.warning("Seu carrinho está vazio.")
+        #         else:
+        #             finalizar_compra(st.session_state.cliente_id)
+        #             st.success("Compra finalizada com sucesso! Seus ingressos já estão disponíveis em **Meus Ingressos**.")
+        #             st.rerun()
 
 
 
