@@ -87,7 +87,8 @@ def pagina_crud_eventos():
                 imagem_path = evento["imagem"]
                 
                 if uploaded_file:
-                    imagem_path = os.path.join("imagens/eventos", uploaded_file.name)
+                    imagem_nome = evento["imagem"].split("\\")[2]
+                    imagem_path = os.path.join("imagens\\eventos", imagem_nome)
                     
                     with open(imagem_path, "wb") as f:
                         f.write(uploaded_file.getbuffer())
@@ -225,11 +226,8 @@ def remover_evento(evento_id):
     conexao.commit()
     conexao.close()
     
-    if imagem_path and os.path.exists(imagem_path) and imagem_path != "temp":
-        try:
-            os.remove(imagem_path)
-        except OSError as e:
-            st.error(f"Erro ao tentar excluir {imagem_path}")
+    if imagem_path and os.path.exists(imagem_path):
+        os.remove(imagem_path)
             
     st.session_state.eventos = carregar_eventos()
     st.session_state.evento_remover_id = None
@@ -431,8 +429,8 @@ def pagina_crud_alimentos():
                 imagem_path = alimento["imagem"]
                 
                 if uploaded_file:
-                    os.makedirs("imagens/alimentos", exist_ok=True)
-                    imagem_path = os.path.join("imagens/alimentos", uploaded_file.name)
+                    imagem_nome = alimento["imagem"].split("\\")[2]
+                    imagem_path = os.path.join("imagens\\alimentos", imagem_nome)
                     
                     with open(imagem_path, "wb") as f:
                         f.write(uploaded_file.getbuffer())
@@ -595,11 +593,8 @@ def remover_alimento(alimento_id):
     conexao.commit()
     conexao.close()
 
-    if imagem_path and os.path.exists(imagem_path) and imagem_path != "temp":
-        try:
-            os.remove(imagem_path)
-        except OSError as e:
-            st.error(f"Erro ao tentar excluir {imagem_path}")
+    if imagem_path and os.path.exists(imagem_path):
+        os.remove(imagem_path)
 
     st.session_state.alimentos = [e for e in st.session_state.alimentos if e["id"] != alimento_id]
     st.session_state.alimento_remover_id = None

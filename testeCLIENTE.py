@@ -443,7 +443,6 @@ def finalizar_compra(cliente_id):
 
 def pagina_login():
     st.title("Bem-vindo")
-    st.divider()
 
     with st.form("login_form"):
         st.markdown("### Login")
