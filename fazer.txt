@@ -5,6 +5,6 @@ falta fazer:
 
 
 talvez:
-- adicionar uma
+- adicionar uma verificação de idade em alguns eventos marcados como adultos (lugares com álcool)
 
 bugs:
